@@ -1,0 +1,11 @@
+[run]
+source = nti.app.products.zapier
+
+[report]
+show_missing = true
+exclude_lines =
+    pragma: no cover
+    class I[A-Z]\w+\((Interface|I[A-Z].*)\):
+    raise NotImplementedError
+    raise AssertionError
+    self\.fail
