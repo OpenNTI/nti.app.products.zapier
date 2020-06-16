@@ -1,0 +1,6 @@
+[console_scripts]
+
+
+[z3c.autoinclude.plugin]
+target = nti.app
+
