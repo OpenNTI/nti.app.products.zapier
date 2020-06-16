@@ -135,7 +135,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'ntiappproductszapier .tex', u'nti.app.products.zapier  Documentation',
+    (master_doc, 'ntiappproductszapier.tex', u'nti.app.products.zapier Documentation',
      u'NextThought', 'manual'),
 ]
 
@@ -145,7 +145,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'ntiappproductszapier ', u'nti.app.products.zapier  Documentation',
+    (master_doc, 'ntiappproductszapier', u'nti.app.products.zapier Documentation',
      [author], 1)
 ]
 
@@ -156,8 +156,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'ntiappproductszapier ', u'nti.app.products.zapier  Documentation',
-     author, 'ntiappproductszapier ', 'One line description of project.',
+    (master_doc, 'ntiappproductszapier', u'nti.app.products.zapier Documentation',
+     author, 'ntiappproductszapier', 'One line description of project.',
      'Miscellaneous'),
 ]
 
@@ -171,9 +171,9 @@ intersphinx_mapping = {
 }
 
 extlinks = {
-    'issue': ('https://github.com/NextThought/nti.app.products.zapier /issues/%s',
+    'issue': ('https://github.com/NextThought/nti.app.products.zapier/issues/%s',
               'issue #'),
-    'pr': ('https://github.com/NextThought/nti.app.products.zapier /pull/%s',
+    'pr': ('https://github.com/NextThought/nti.app.products.zapier/pull/%s',
            'pull request #')}
 
 autodoc_default_flags = ['members', 'show-inheritance']
