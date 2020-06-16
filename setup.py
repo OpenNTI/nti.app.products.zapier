@@ -21,7 +21,7 @@ def _read(fname):
 
 setup(
     name='nti.app.products.zapier',
-    version=_read('version.txt').strip(),
+    version='0.0.1.dev0',
     author='Josh Zuech',
     author_email='josh.zuech@nextthought.com',
     description="NTI zapier",
@@ -41,11 +41,13 @@ setup(
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: Implementation :: CPython',
         'Programming Language :: Python :: Implementation :: PyPy',
     ],
     url="https://github.com/NextThought/nti.app.products.zapier",
-    zip_safe=True,
+    zip_safe=False,
     packages=find_packages('src'),
     package_dir={'': 'src'},
     include_package_data=True,
