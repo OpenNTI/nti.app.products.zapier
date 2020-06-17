@@ -62,6 +62,7 @@ setup(
             'Sphinx',
             'repoze.sphinx.autointerface',
             'sphinx_rtd_theme',
+            'nti_sphinx_questions'
         ],
     },
     entry_points=entry_points,

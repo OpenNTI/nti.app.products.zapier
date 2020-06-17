@@ -39,6 +39,7 @@ extensions = [
     'sphinx.ext.intersphinx',
     'sphinx.ext.viewcode',
     'repoze.sphinx.autointerface',
+    'nti_sphinx_questions'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
