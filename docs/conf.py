@@ -27,9 +27,9 @@ rqmt = pkg_resources.require('nti.app.products.zapier ')[0]
 
 # -- General configuration ------------------------------------------------
 
-# If your documentation needs a minimal Sphinx version, state it here.
-#
-# needs_sphinx = '1.0'
+# 1.8 was the last version that runs on Python 2; 2.0+ requires Python 3.
+# `autodoc_default_options` was new in 1.8
+needs_sphinx = "1.8"
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
@@ -78,6 +78,9 @@ language = None
 # directories to ignore when looking for source files.
 # This patterns also effect to html_static_path and html_extra_path
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+
+# The reST default role (used for this markup: `text`) to use for all documents.
+default_role = 'obj'
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
@@ -176,6 +179,9 @@ extlinks = {
     'pr': ('https://github.com/NextThought/nti.app.products.zapier/pull/%s',
            'pull request #')}
 
-autodoc_default_flags = ['members', 'show-inheritance']
+autodoc_default_options = {
+    'members': None,
+    'show-inheritance': None,
+}
 autoclass_content = 'both'
 autodoc_member_order = 'bysource'
