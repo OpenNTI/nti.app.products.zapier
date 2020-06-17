@@ -40,7 +40,7 @@ the benefit over just going with Basic Auth between the two.
 
 `API Key Auth <https://platform.zapier.com/docs/apikey>`_ allows
 taking an API key, or other authentication information, via form and
-providing to each call in a query param or header. This could be
+providing to each call in a query parameter or header. This could be
 applicable as we have some concept of bearer tokens for users, but,
 Zapier specifically states that users must be able to manage these
 keys in our UI. They can’t be obtained via support or other out of app
@@ -139,8 +139,8 @@ the scope of a trigger to a specific user or a specific course.
 
 .. question:: Should we consider making this a more generic progress
               updated event with an optional threshold if you only
-              care about completness. For example hr.com integration
-              and imis integration care about partial updates, they
+              care about completeness. For example hr.com integration
+              and IMIS integration care about partial updates, they
               are polling for those currently.
 
 Actions
@@ -158,13 +158,13 @@ information (name, email, etc.).
               Could the user go through the forgot password flow to
               set initial credentials? Would we give them a one time
               use link to set initial credentials? We could consider
-              making this an "Inivite User" action which effectively
-              bypasses that potential issue. Aaron, seemed ok with that.
+              making this an "Invite User" action which effectively
+              bypasses that potential issue. Aaron, seemed OK with that.
 
 Enroll User in Course
 ~~~~~~~~~~~~~~~~~~~~~
 
-Enrolls a given user in agiven course.
+Enrolls a given user in a given course.
 
 Input: Username and course identifier
 
@@ -214,7 +214,7 @@ Searches
 special type of action used to lookup or find data in the system. They
 can optionally be paired with create actions to perform a “create if
 not exist” style action. Searches return a list of matches. Zapier
-specifies no more than five searches for aninitial
+specifies no more than five searches for an initial
 integration. Proposed searches for initial version are:
 
 .. _search_user:
@@ -263,3 +263,6 @@ terminology. I.e. course vs CatalogEntry or CourseInstance.
 Zapier also talks about not returning to much information on the
 objects returned to the user. Perhaps we need different externalizers
 for these? Those objects become public API.
+
+..  LocalWords:  Zapier zapier integrations Auth apis auth UI OAuth
+..  LocalWords:  oauth
