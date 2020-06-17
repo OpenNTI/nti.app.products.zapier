@@ -37,6 +37,7 @@ needs_sphinx = "1.8"
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.intersphinx',
+    'sphinx.ext.todo',
     'sphinx.ext.viewcode',
     'repoze.sphinx.autointerface',
     'nti_sphinx_questions'
@@ -87,7 +88,8 @@ default_role = 'obj'
 pygments_style = 'sphinx'
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
-todo_include_todos = False
+todo_include_todos = True
+todo_emit_warnings = False
 
 
 # -- Options for HTML output ----------------------------------------------

@@ -120,6 +120,13 @@ Triggers when a new course is created in the site. The shape of the
 object should be a representation of the catalog entry that includes
 basic course information.
 
+.. note:: It sounds like we don't want creation like we typically
+          think of things, but rather when a course is published /
+          becomes available. We should probably defer this trigger as
+          that seems tricky to get right given the complication that
+          publication isn't one and done. A course/catalog entry could
+          move back and forth between visibility states.
+
 Course Completed
 ~~~~~~~~~~~~~~~~
 
@@ -130,6 +137,12 @@ information (with progress/completion status).
 This trigger should include an optional filter that allows narrowing
 the scope of a trigger to a specific user or a specific course.
 
+.. question:: Should we consider making this a more generic progress
+              updated event with an optional threshold if you only
+              care about completness. For example hr.com integration
+              and imis integration care about partial updates, they
+              are polling for those currently.
+
 Actions
 -------
 
@@ -139,13 +152,28 @@ Create New User
 Creates a new user in the site. Input is the same as our account
 creation form minus the password. Output is a representation of the
 user object including at least the username and the basic profile
-information (name, email, etc.).  Enroll User in Course
+information (name, email, etc.).
+
+.. question:: How would we deal with authentication credentials here?
+              Could the user go through the forgot password flow to
+              set initial credentials? Would we give them a one time
+              use link to set initial credentials? We could consider
+              making this an "Inivite User" action which effectively
+              bypasses that potential issue. Aaron, seemed ok with that.
+
+Enroll User in Course
+~~~~~~~~~~~~~~~~~~~~~
 
 Enrolls a given user in agiven course.
 
 Input: Username and course identifier
 
 Output: Course enrollment information / identifier?
+
+.. question:: What do we do about scope. that's largely hidden from
+              users currently. Perhaps make an optional field
+              defaulting to Public (Purchased?) or maybe that default
+              becomes a site / course setting?
 
 Drop User from Course
 ~~~~~~~~~~~~~~~~~~~~~
@@ -154,7 +182,30 @@ Drops a user from the given course
 
 **Input**: Username and course identifier
 
-**Output**: 
+**Output**:
+
+.. warning:: This would be considered a destructive action which
+             Zapier recommends avoiding. On second look, they actually
+             say they explicitly `don't allow destructive actions
+             <https://platform.zapier.com/docs/actions>`_. Presumably
+             they enforce this as part of the review?
+
+	       Zapier does not allow action steps to delete or remove
+	       data, to prevent data loss. Action steps may only add
+	       or update data.
+
+	     The `review guidelines
+	     <https://platform.zapier.com/partners/integration-review-guidelines#58-delete-actions>`_
+	     go on to say:
+
+	       **5.8 Delete Actions**
+
+	       Avoid delete actions which make it easy for users to
+	       accidentally delete data they didn’t intend to
+	       remove. Instead, offer less permanent actions such as
+	       options to deactivate, unsubscribe, or tag a user in a
+	       certain way (where users could then easily delete those
+	       items from inside your product).
 
 Searches
 --------
@@ -165,6 +216,8 @@ can optionally be paired with create actions to perform a “create if
 not exist” style action. Searches return a list of matches. Zapier
 specifies no more than five searches for aninitial
 integration. Proposed searches for initial version are:
+
+.. _search_user:
 
 Search User
 ~~~~~~~~~~~
@@ -179,6 +232,12 @@ matching user from the site, or empty if there is no match.
 basic profile information (name, email, etc) and any custom external
 identifiers.
 
+.. question:: This would actually be quite a bit more flexible if this
+          worked like the existing UserSearch API. That has provision
+          for exact matching username IIRC. It might also mean this
+          could be used as the backing of a zapier `dynamic dropdown
+          <https://platform.zapier.com/docs/input-designer#dropdown>`_.
+
 Search Course
 ~~~~~~~~~~~~~
 
@@ -189,6 +248,10 @@ match.
 
 **Input**: NTIID?
 **Output**: Representation of the Catalog Entry that includes basic course info (title, provider id, etc).
+
+.. question:: Similar to :ref:`search_user` it would be nice if this could
+          become the backing of a `dynamic dropdown
+          <https://platform.zapier.com/docs/input-designer#dropdown>`_.
 
 Other Thoughts
 --------------
