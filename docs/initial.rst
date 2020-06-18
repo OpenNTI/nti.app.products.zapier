@@ -7,6 +7,8 @@ Useful Links
 
 `Zapier Platform Docs <https://platform.zapier.com/docs/zapier-intro>`_
 
+`Zapier "CLI" Docs <https://platform.zapier.com/cli_docs/docs>`_
+
 `Competitor Zapier Integrations <https://docs.google.com/spreadsheets/d/1oP41XkhHVPUTACdvSf3w_8KxhCnOPVBW1aHooWCgJdw/edit?usp=drive_web&ouid=113921017540674916733>`_
 
 
