@@ -1,6 +1,8 @@
 Initial Implementation
 ======================
 
+.. warning:: FOR INTERNAL DISTRIBUTION ONLY
+
 Useful Links
 ------------
 
@@ -177,37 +179,6 @@ Output: Course enrollment information / identifier?
               defaulting to Public (Purchased?) or maybe that default
               becomes a site / course setting?
 
-Drop User from Course
-~~~~~~~~~~~~~~~~~~~~~
-
-Drops a user from the given course
-
-**Input**: Username and course identifier
-
-**Output**:
-
-.. warning:: This would be considered a destructive action which
-             Zapier recommends avoiding. On second look, they actually
-             say they explicitly `don't allow destructive actions
-             <https://platform.zapier.com/docs/actions>`_. Presumably
-             they enforce this as part of the review?
-
-	       Zapier does not allow action steps to delete or remove
-	       data, to prevent data loss. Action steps may only add
-	       or update data.
-
-	     The `review guidelines
-	     <https://platform.zapier.com/partners/integration-review-guidelines#58-delete-actions>`_
-	     go on to say:
-
-	       **5.8 Delete Actions**
-
-	       Avoid delete actions which make it easy for users to
-	       accidentally delete data they didn’t intend to
-	       remove. Instead, offer less permanent actions such as
-	       options to deactivate, unsubscribe, or tag a user in a
-	       certain way (where users could then easily delete those
-	       items from inside your product).
 
 Searches
 --------
