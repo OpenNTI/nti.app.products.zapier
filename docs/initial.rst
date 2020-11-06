@@ -105,8 +105,10 @@ New User Created
 `Triggers <https://platform.zapier.com/docs/triggers>`_ when a new
 user is created in the site. The shape of the object should be a
 representation of the user object including at least the username and
-the basic profile information (name, email, etc.).  New Enrollment
-Created
+the basic profile information (name, email, etc.).
+
+New Enrollment Created
+~~~~~~~~~~~~~~~~~~~~~~
 
 Triggers when a user is enrolled in a course. The object should
 include a representation of the user object including at least the
