@@ -14,11 +14,14 @@ Response
 For Zapier, we seem to need a non-empty response here with the user information.
 Return an ``IUserDetails`` instance containing the following info:
 
-:username:
-:email:
-:name:
-:created:
-:last_login:
+``IUserDetails``
+    :username:
+    :email:
+    :name:
+    :noni18n_firstname:
+    :noni18n_lastname:
+    :created:
+    :last_login:
 
 
 Subscription Management
@@ -31,13 +34,39 @@ POST ``/dataserver2/api/zapier/subscriptions/``
 
 Request
 ~~~~~~~
+An ``IExternalSubscription`` object, currently one of the following options:
+``IUserCreatedSubscription``, ``ICourseCreatedSubscription``,
+``IUserEnrolledSubscription``, or ``ICourseCompletedSubscription``.  A mime
+type will be required to distinguish which to create and provide for field
+validation. Objects and their fields are listed below:
 
-:event: One of: user.create, user.enroll, course.create, course.complete
-:target: The url to POST object data to when the trigger fires.
-:user_filter: Used for user.enroll or course.complete. Specifies a username
-    to which the subscription should be restricted.
-:course_filter: Used for user.enroll or course.complete. Specifies a course id (ntiid)
-    to which the subscription should be restricted.
+``IExternalSubscription``
+    Represents a subscription from an external source that we should notify on
+    certain events.  Serves as a base for the creatable subscription types
+    listed below.
+
+    :event_type: One of: user.create, user.enroll, course.create, course.complete
+    :target: The url to POST object data to when the trigger fires.
+
+``IUserCreatedSubscription``
+    :MimeType:  application/vnd.nextthought.api.subscription.usercreated
+
+``ICourseCreatedSubscription``
+    :MimeType:  application/vnd.nextthought.api.subscription.coursecreated
+
+``IUserEnrolledSubscription``
+    :MimeType:  application/vnd.nextthought.api.subscription.userenrolled
+    :user_filter: Used for user.enroll or course.complete. Specifies a username
+        to which the subscription should be restricted.
+    :course_filter: Used for user.enroll or course.complete. Specifies a course id (ntiid)
+        to which the subscription should be restricted.
+
+``ICourseCompletedSubscription``
+    :MimeType:  application/vnd.nextthought.api.subscription.usercreated
+    :user_filter: Used for user.enroll or course.complete. Specifies a username
+        to which the subscription should be restricted.
+    :course_filter: Used for user.enroll or course.complete. Specifies a course id (ntiid)
+        to which the subscription should be restricted.
 
 TODO: How would one hook into the subscription firing mechanisms to allow
 filtering?  Would this be an extension of the current subscription implementation
@@ -47,16 +76,18 @@ Response
 ~~~~~~~~
 Success: ``201 Created``
 
-Returns an ``ISubscriptionDetails`` object, containing the following:
+Returns an ``ISubscriptionDetails`` object for the newly created subscription.
 
-:event:  The event type used to create the subscription.
-:target:  The url to POST object data to when the trigger fires.
-:owner:  Owner of the subscription.
-:created: When the subscription was first created (ISO formatted date).
-:active:  Whether it's active.
+``ISubscriptionDetails``
+    :event_type:  The event type used to create the subscription.
+    :target:  The url to POST object data to when the trigger fires.
+    :owner:  Owner of the subscription.
+    :created: When the subscription was first created (ISO formatted date).
+    :active:  Whether it's active.
+    :href:  Location of the subscription.
 
 Will likely need to extend the current subscription to allow storage of
-``event`` data.  This could, to a limited degree, be derived from the
+``event_type`` data.  This could, to a limited degree, be derived from the
 subscriptions ``for`` and ``when`` data, but we may not want to
 expose that, and wouldn't match what was used during creation anyway.
 
@@ -79,39 +110,25 @@ using with `nti.webhooks`.
 
 Triggers
 ========
+.. note:: It might be useful to include items from the subscription that
+    initiated the trigger in the events sent.  We can probably deduce
+    ``event_type``, but the ``href`` of the subscription, for example, might
+    also be good to include.
 
 New User Created
 ----------------
 When: ``IPrincipal``, ``IObjectAddedEvent``
+
 Method: POST
 
 Request
 ~~~~~~~
-Sends the ``IUserDetails`` corresponding with the newly created user.
+Sends an ``IUserCreatedEvent`` containing the details of the newly created user:
 
-
-New Enrollment Created
-----------------------
-When: ``ICourseInstanceEnrollmentRecord``, ``IStoreEnrollmentEvent``
-Method: POST
-
-Request
-~~~~~~~
-Sends an ``ICourseEnrollmentDetails`` containing the user and course information:
-
-:id:  NTIID? of the enrollment record?
-:user: The ``IUserDetails`` for the enrolled user.
-:course: The ``ICourseDetails`` for the associated course.
-:scope: Name of the enrollment scope.
-
-The ``ICourseDetails`` would contain the following information from the
-course instance:
-
-:id: NTIID?
-:provider_id:
-:title:
-:start_date:
-:end_date:
+``IUserCreatedEvent``
+    :event_type: ``user.create``
+    :data:  Contains an ``object`` attribute with the ``IUserDetails`` of the
+        created user.
 
 
 New Course Created
@@ -121,7 +138,42 @@ Method: POST
 
 Request
 ~~~~~~~
-``ICourseDetails`` for the created course.
+Sends an ``ICourseCreatedEvent`` containing the details of the newly created course.
+
+``ICourseCreatedEvent``
+    :event_type:  ``course.create``
+    :data:  Contains an ``object`` attribute with the ``ICourseDetails`` of the
+        created course.
+
+``ICourseDetails``
+    :id: NTIID of course instance
+    :provider_id:
+    :title:
+    :description:
+    :start_date:
+    :end_date:
+
+
+New Enrollment Created
+----------------------
+When: ``ICourseInstanceEnrollmentRecord``, ``IStoreEnrollmentEvent``
+
+Method: POST
+
+Request
+~~~~~~~
+Sends an ``IUserEnrolledEvent`` containing the enrollment information.
+
+``IUserEnrolledEvent``
+    :event_type: ``user.enroll``
+    :data: Contains an ``object`` attribute with the ``ICourseEnrollmentDetails``
+        with user and course info.
+
+``ICourseEnrollmentDetails``
+    :id:  NTIID of the enrollment record
+    :user: The ``IUserDetails`` for the enrolled user.
+    :course: The ``ICourseDetails`` for the associated course.
+    :scope: Name of the enrollment scope.
 
 
 Course Completed
@@ -135,10 +187,16 @@ Method: POST
 
 Request
 ~~~~~~~
-Sends an ``ICourseCompletionNotification``:
+Sends an ``ICourseCompledEvent`` containing the completion info:
 
-:user: The ``IUserDetails`` for the enrolled user.
-:course: The ``ICourseDetails`` for the associated course.
+``ICourseCompledEvent``
+    :event_type: ``course.complete``
+    :data: Contains an ``object`` attribute with the ``ICourseCompletionDetails``
+        with user and course info.
+
+``ICourseCompletionDetails``
+    :user: The ``IUserDetails`` for the enrolled user.
+    :course: The ``ICourseDetails`` for the associated course.
 
 
 Actions
@@ -165,7 +223,7 @@ The ``IUserDetails`` corresponding with the newly created user.
 
 Enroll User in Course
 ---------------------
-POST ``/dataserver2/api/zapier/users/<username>/enrollments``
+POST ``/dataserver2/api/zapier/enrollments``
 
 Request
 ~~~~~~~
@@ -184,8 +242,40 @@ Search
 
 Search User
 -----------
-TODO
+GET ``/dataserver2/api/zapier/user_search``
+
+Request
+~~~~~~~
+Our current user search api is limited to 1000 results.  Since I'm sure we
+could have sites with many thousands, does allowing paging here cause
+performance issues?  Should we continue to limit results in a similar way, or
+allow paging, similar to the course search?  Also, should we limit to users
+only (vs FL/DFLs)?
+
+:filter:  Filter string used to search for matches by username, alias, and
+    real name, depending on site policies.
+
+
+Response
+~~~~~~~~
+Returns an item list of ``IUserDetails`` objects.
+
 
 Search Course
 -------------
-TODO
+GET ``/dataserver2/api/zapier/course_search``
+
+Request
+~~~~~~~
+
+:filter:  Filter string used to search for matches by title, description,
+    provider id and tags
+:sortOn:  The key on which to sort.  One of: "title", "startdate", or "enddate"
+:sortOrder:  "ascending" or "descending"
+:batchStart:  The absolute index of the first entry to return, after sorting.
+:batchSize:  The number of items to return in the batch/page.
+
+
+Response
+~~~~~~~~
+Returns an item list of ``ICourseDetails`` objects.
