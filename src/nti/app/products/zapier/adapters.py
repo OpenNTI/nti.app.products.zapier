@@ -29,7 +29,7 @@ from nti.webhooks.interfaces import IWebhookSubscription
 
 def _email_for_user(user):
     addr = IEmailAddressable(user, None)
-    return addr and addr.email
+    return addr.email if addr is not None else None
 
 
 def _realname_for_user(user):
