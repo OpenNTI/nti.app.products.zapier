@@ -187,9 +187,9 @@ Method: POST
 
 Request
 ~~~~~~~
-Sends an ``ICourseCompledEvent`` containing the completion info:
+Sends an ``ICourseCompletedEvent`` containing the completion info:
 
-``ICourseCompledEvent``
+``ICourseCompletedEvent``
     :event_type: ``course.complete``
     :data: Contains an ``object`` attribute with the ``ICourseCompletionDetails``
         with user and course info.
