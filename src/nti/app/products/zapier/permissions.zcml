@@ -1,0 +1,13 @@
+<!-- -*- mode: nxml -*- -->
+<configure  xmlns="http://namespaces.zope.org/zope"
+            i18n_domain="nti.app.products.zapier">
+
+    <include package="zope.component" file="meta.zcml" />
+    <include package="zope.security" file="meta.zcml" />
+
+    <!-- Permissions that we use. -->
+    <permission
+        id="nti.actions.view_events"
+        title="View events for an object" />
+
+</configure>

@@ -1,0 +1,65 @@
+<!-- -*- mode: nxml -*- -->
+<configure	xmlns="http://namespaces.zope.org/zope"
+            xmlns:ext="http://nextthought.com/ntp/ext">
+
+    <include package="zope.component" file="meta.zcml" />
+    <include package="zope.security" file="meta.zcml" />
+    <include package="zope.component" />
+    <include package="zope.security" />
+
+    <!-- Avoid conflicts with permissions already defined by the dataserver -->
+    <exclude package="nti.webhooks" file="permissions.zcml" />
+    <include package="nti.webhooks" />
+
+    <!-- Define permissions we use -->
+    <include package="." file="permissions.zcml" />
+
+    <subscriber
+        for="nti.coremetadata.interfaces.IUser zope.lifecycleevent.interfaces.IObjectAddedEvent"
+        handler="nti.webhooks.subscribers.dispatch_webhook_event" />
+
+    <adapter factory=".adapters._user_payload"
+             for="nti.coremetadata.interfaces.IUser"
+             provides="nti.webhooks.interfaces.IWebhookPayload"
+             name="zapier-webhook-delivery"/>
+
+    <adapter factory=".traversal.APIPathAdapter"
+             for="nti.dataserver.interfaces.IDataserverFolder pyramid.interfaces.IRequest"
+             provides="zope.traversing.interfaces.IPathAdapter"
+             name="api" />
+    <adapter factory="nti.traversal.traversal.DefaultAdapterTraversable"
+             for=".traversal.APIPathAdapter pyramid.interfaces.IRequest" />
+    <adapter factory=".traversal.IntegrationProviderPathAdapter"
+             for=".traversal.APIPathAdapter pyramid.interfaces.IRequest"
+             provides="zope.traversing.interfaces.IPathAdapter"
+             name="zapier" />
+    <adapter factory="nti.traversal.traversal.DefaultAdapterTraversable"
+             for=".traversal.IntegrationProviderPathAdapter pyramid.interfaces.IRequest" />
+    <adapter factory=".traversal.SubscriptionsPathAdapter"
+             for=".traversal.IntegrationProviderPathAdapter pyramid.interfaces.IRequest"
+             provides="zope.traversing.interfaces.IPathAdapter"
+             name="subscriptions" />
+
+    <utility factory=".utils.ZapierWebhookDialect" name="zapier"/>
+
+    <!-- Provide appropriate permissions for our site admins to receive user events -->
+    <adapter factory=".zope_security.UserPrincipalPermissionMap"
+             provides="zope.securitypolicy.interfaces.IPrincipalPermissionMap"
+             for="nti.coremetadata.interfaces.IUser" />
+
+    <!-- Decorators -->
+    <subscriber factory="nti.appserver.pyramid_renderers_edit_link_decorator.EditLinkDecorator"
+                provides="nti.externalization.interfaces.IExternalMappingDecorator"
+                for="nti.webhooks.subscriptions.PersistentSubscription pyramid.interfaces.IRequest" />
+
+    <!-- Externalization -->
+    <include package="nti.externalization" file="meta.zcml" />
+    <include package="nti.externalization" />
+
+    <ext:registerAutoPackageIO
+        root_interfaces=".interfaces.IUserCreatedEvent
+                         .interfaces.IUserCreatedSubscription
+                         .interfaces.IUserDetails"
+        modules=".model" />
+
+</configure>
