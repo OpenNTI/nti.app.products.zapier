@@ -11,6 +11,11 @@ entry_points = {
 }
 
 TESTS_REQUIRE = [
+    'nti.testing',
+    'zope.testrunner',
+    'fudge',
+    'pyhamcrest',
+    'nose2[coverage_plugin]',
 ]
 
 
@@ -54,7 +59,8 @@ setup(
     namespace_packages=['nti', 'nti.app', 'nti.app.products'],
     tests_require=TESTS_REQUIRE,
     install_requires=[
-        'setuptools'
+        'setuptools',
+        'nti.webhooks',
     ],
     extras_require={
         'test': TESTS_REQUIRE,
