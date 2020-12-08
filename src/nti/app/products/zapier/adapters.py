@@ -11,11 +11,9 @@ from zope import interface
 from zope.lifecycleevent import IObjectAddedEvent
 
 from nti.app.products.zapier.interfaces import EVENT_USER_CREATE
-from nti.app.products.zapier.interfaces import IExternalSubscription
 
 from nti.app.products.zapier.model import UserDetails
 from nti.app.products.zapier.model import UserCreatedEvent
-from nti.app.products.zapier.model import UserCreatedSubscription
 
 from nti.coremetadata.interfaces import IUser
 
@@ -24,7 +22,6 @@ from nti.dataserver.users.interfaces import IFriendlyNamed
 from nti.mailer.interfaces import IEmailAddressable
 
 from nti.webhooks.interfaces import IWebhookPayload
-from nti.webhooks.interfaces import IWebhookSubscription
 
 
 def _email_for_user(user):
