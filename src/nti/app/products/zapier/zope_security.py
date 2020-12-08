@@ -26,6 +26,11 @@ from nti.coremetadata.interfaces import IUser
 @component.adapter(IUser)
 @interface.implementer(IPrincipalPermissionMap)
 class UserPrincipalPermissionMap(object):
+    """
+    Ensure our site admins have access to users in their site
+    e.g. for checking user object access when sending webhooks created
+    by the site admin
+    """
 
     SITE_ADMIN_PERM_IDS = (ACT_VIEW_EVENTS.id,)
 
@@ -46,9 +51,6 @@ class UserPrincipalPermissionMap(object):
                 if self._can_admin(site_admin)]
 
     def getPrincipalsForPermission(self, perm):
-        # Ensure our site admins have access to users in their site
-        # e.g. for checking user object access when sending webhooks created
-        # by the site admin
         result = []
         if perm in self.SITE_ADMIN_PERM_IDS:
             for principal_id in self._effectiveAdminsForUser:
