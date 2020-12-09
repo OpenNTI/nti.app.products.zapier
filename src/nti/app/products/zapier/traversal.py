@@ -27,17 +27,6 @@ from nti.dataserver.interfaces import ACE_DENY_ALL
 
 
 @interface.implementer(IPathAdapter)
-class APIPathAdapter(Contained):
-
-    __name__ = 'api'
-
-    def __init__(self, context, request):
-        self.context = context
-        self.request = request
-        self.__parent__ = context
-
-
-@interface.implementer(IPathAdapter)
 class IntegrationProviderPathAdapter(Contained):
 
     __name__ = "zapier"
