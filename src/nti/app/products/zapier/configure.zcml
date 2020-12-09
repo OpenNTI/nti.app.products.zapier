@@ -23,14 +23,9 @@
              provides="nti.webhooks.interfaces.IWebhookPayload"
              name="zapier-webhook-delivery"/>
 
-    <adapter factory=".traversal.APIPathAdapter"
-             for="nti.dataserver.interfaces.IDataserverFolder pyramid.interfaces.IRequest"
-             provides="zope.traversing.interfaces.IPathAdapter"
-             name="api" />
-    <adapter factory="nti.traversal.traversal.DefaultAdapterTraversable"
-             for=".traversal.APIPathAdapter pyramid.interfaces.IRequest" />
+    <!-- Traversal -->
     <adapter factory=".traversal.IntegrationProviderPathAdapter"
-             for=".traversal.APIPathAdapter pyramid.interfaces.IRequest"
+             for="nti.dataserver.interfaces.IDataserverFolder pyramid.interfaces.IRequest"
              provides="zope.traversing.interfaces.IPathAdapter"
              name="zapier" />
     <adapter factory="nti.traversal.traversal.DefaultAdapterTraversable"
