@@ -5,7 +5,6 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from nti.dataserver.interfaces import ISiteAdminUtility
 from zope import component
 from zope import interface
 
@@ -21,6 +20,8 @@ from nti.app.products.zapier.authorization import ACT_VIEW_EVENTS
 from nti.app.users.utils import get_site_admins
 
 from nti.coremetadata.interfaces import IUser
+
+from nti.dataserver.interfaces import ISiteAdminUtility
 
 
 @component.adapter(IUser)
