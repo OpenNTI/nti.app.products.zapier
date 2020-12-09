@@ -37,10 +37,14 @@
 
     <utility factory=".utils.ZapierWebhookDialect" name="zapier"/>
 
+    <!-- Security Policy -->
     <!-- Provide appropriate permissions for our site admins to receive user events -->
     <adapter factory=".zope_security.UserPrincipalPermissionMap"
              provides="zope.securitypolicy.interfaces.IPrincipalPermissionMap"
              for="nti.coremetadata.interfaces.IUser" />
+    <subscriber
+        for="nti.webhooks.interfaces.IWebhookSubscription zope.lifecycleevent.interfaces.IObjectAddedEvent"
+        handler=".subscribers.apply_security_to_subscription" />
 
     <!-- Decorators -->
     <subscriber factory="nti.appserver.pyramid_renderers_edit_link_decorator.EditLinkDecorator"
