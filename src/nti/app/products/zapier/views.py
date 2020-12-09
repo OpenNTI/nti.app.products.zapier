@@ -7,6 +7,8 @@ from __future__ import print_function
 
 from operator import attrgetter
 
+from pyramid import httpexceptions as hexc
+
 from pyramid.view import view_config
 
 from requests.structures import CaseInsensitiveDict
@@ -24,6 +26,8 @@ from nti.app.base.abstract_views import AbstractAuthenticatedView
 from nti.app.externalization.view_mixins import BatchingUtilsMixin
 from nti.app.externalization.view_mixins import ModeledContentUploadRequestUtilsMixin
 
+from nti.app.products.zapier import MessageFactory as _
+
 from nti.app.products.zapier.authorization import ACT_VIEW_EVENTS
 
 from nti.app.products.zapier.traversal import SubscriptionsPathAdapter
@@ -34,6 +38,8 @@ from nti.appserver.ugd_edit_views import UGDDeleteView
 from nti.dataserver import authorization as nauth
 
 from nti.dataserver.authorization import ACT_READ
+from nti.dataserver.authorization import is_admin
+from nti.dataserver.authorization import is_site_admin
 
 from nti.dataserver.authorization_acl import has_permission
 
@@ -52,12 +58,27 @@ ITEM_COUNT = StandardExternalFields.ITEM_COUNT
 logger = __import__('logging').getLogger(__name__)
 
 
+class SubscriptionViewMixin(object):
+
+    @Lazy
+    def is_admin(self):
+        return is_admin(self.remoteUser)
+
+    def _predicate(self):
+        if not self.is_admin and not is_site_admin(self.remoteUser):
+            raise hexc.HTTPForbidden(_('Cannot view subscriptions.'))
+
+    def __call__(self):
+        self._predicate()
+        return super(SubscriptionViewMixin, self).__call__()
+        
+
 @view_config(route_name='objects.generic.traversal',
              request_method='POST',
              renderer='rest',
-             context=SubscriptionsPathAdapter,
-             permission=nauth.ACT_CREATE)
-class AddSubscriptionView(AbstractAuthenticatedView,
+             context=SubscriptionsPathAdapter)
+class AddSubscriptionView(SubscriptionViewMixin,
+                          AbstractAuthenticatedView,
                           ModeledContentUploadRequestUtilsMixin):
 
     def _do_call(self):
@@ -88,7 +109,8 @@ class AddSubscriptionView(AbstractAuthenticatedView,
              renderer='rest',
              context=IWebhookSubscription,
              permission=nauth.ACT_DELETE)
-class DeleteSubscriptionView(UGDDeleteView):
+class DeleteSubscriptionView(SubscriptionViewMixin,
+                             UGDDeleteView):
 
     def _do_delete_object(self, theObject):
         del theObject.__parent__[theObject.__name__]
@@ -98,9 +120,9 @@ class DeleteSubscriptionView(UGDDeleteView):
 @view_config(route_name='objects.generic.traversal',
              request_method='GET',
              renderer='rest',
-             context=SubscriptionsPathAdapter,
-             permission=ACT_READ)
-class ListSubscriptions(AbstractAuthenticatedView,
+             context=SubscriptionsPathAdapter)
+class ListSubscriptions(SubscriptionViewMixin,
+                        AbstractAuthenticatedView,
                         BatchingUtilsMixin):
 
     _DEFAULT_BATCH_SIZE = 30

@@ -55,13 +55,6 @@ class SubscriptionsPathAdapter(Contained):
         self.request = request
         self.__parent__ = context
 
-    def __acl__(self):
-        site_admin_perms = (ACT_CREATE, ACT_READ)
-        acl = [ace_allowing(ROLE_SITE_ADMIN, site_admin_perms, type(self)),
-               ACE_DENY_ALL]
-        result = acl_from_aces(acl)
-        return result
-
 
 def get_integration_provider(request):
     return getattr(request, "_integration_provider", None)
