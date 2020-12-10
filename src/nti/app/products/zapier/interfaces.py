@@ -28,15 +28,15 @@ from nti.schema.field import Object
 from nti.schema.field import ValidChoice
 from nti.schema.field import ValidTextLine
 
-EVENT_USER_CREATE = u"user.create"
-EVENT_USER_ENROLL = u"user.enroll"
-EVENT_COURSE_CREATE = u"course.create"
-EVENT_COURSE_COMPLETE = u"course.complete"
+EVENT_USER_CREATED = u"user.created"
+EVENT_USER_ENROLLED = u"user.enrolled"
+EVENT_COURSE_CREATED = u"course.created"
+EVENT_COURSE_COMPLETED = u"course.completed"
 
-EVENTS = (EVENT_USER_CREATE,
-          EVENT_USER_ENROLL,
-          EVENT_COURSE_CREATE,
-          EVENT_COURSE_COMPLETE)
+EVENTS = (EVENT_USER_CREATED,
+          EVENT_USER_ENROLLED,
+          EVENT_COURSE_CREATED,
+          EVENT_COURSE_COMPLETED)
 
 EVENT_VOCABULARY = vocabulary.SimpleVocabulary(
     [vocabulary.SimpleTerm(_x) for _x in EVENTS]
@@ -60,21 +60,10 @@ class IUserDetails(ICreatedTime):
     last_login = interface.Attribute("The last login time")
 
 
-class IExternalSubscription(ICreated):
-
-    event_type = ValidChoice(title=u"Event Type",
-                             vocabulary=EVENT_VOCABULARY,
-                             required=True)
+class ISubscriptionRequest(ICreated):
 
     target = HTTPURL(title=u"Target Url",
                      required=True)
-
-
-class IUserCreatedSubscription(IExternalSubscription):
-    """
-    Defines a subscription for receiving events when users are added
-    to the system.
-    """
 
 
 class IExternalEvent(interface.Interface):
@@ -100,3 +89,17 @@ class IIntegrationProviderPathAdapter(IPathAdapter):
     """
     Path adapter with the name of the integration provider (e.g. zapier)
     """
+
+
+class IWebhookSubscriber(interface.Interface):
+    """
+    Intended as an adapter to find an appropriate factory given requested
+    subscription type information.
+    """
+
+    def subscribe(context, target):
+        """
+        Register a new webhook subscription with the given arguments.
+
+        :return:  The stored webhook subscription
+        """

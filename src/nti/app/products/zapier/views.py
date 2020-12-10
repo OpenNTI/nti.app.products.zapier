@@ -19,19 +19,22 @@ from zope.cachedescriptors.property import Lazy
 
 from zope.component.hooks import getSite
 
-from zope.security.interfaces import IPrincipal
+from zope.security import checkPermission
 
 from nti.app.base.abstract_views import AbstractAuthenticatedView
+
+from nti.app.externalization.error import raise_json_error
 
 from nti.app.externalization.view_mixins import BatchingUtilsMixin
 from nti.app.externalization.view_mixins import ModeledContentUploadRequestUtilsMixin
 
 from nti.app.products.zapier import MessageFactory as _
 
-from nti.app.products.zapier.authorization import ACT_VIEW_EVENTS
+from nti.app.products.zapier.interfaces import IWebhookSubscriber
 
-from nti.app.products.zapier.traversal import SubscriptionsPathAdapter
-from nti.app.products.zapier.traversal import get_integration_provider
+from nti.app.products.zapier.model import SubscriptionRequest
+
+from nti.app.products.zapier.traversal import IntegrationProviderPathAdapter
 
 from nti.appserver.ugd_edit_views import UGDDeleteView
 
@@ -41,12 +44,8 @@ from nti.dataserver.authorization import ACT_READ
 from nti.dataserver.authorization import is_admin
 from nti.dataserver.authorization import is_site_admin
 
-from nti.dataserver.authorization_acl import has_permission
-
 from nti.externalization.interfaces import LocatedExternalDict
 from nti.externalization.interfaces import StandardExternalFields
-
-from nti.webhooks.api import subscribe_to_resource
 
 from nti.webhooks.interfaces import IWebhookSubscription
 from nti.webhooks.interfaces import IWebhookSubscriptionManager
@@ -76,27 +75,48 @@ class SubscriptionViewMixin(object):
 @view_config(route_name='objects.generic.traversal',
              request_method='POST',
              renderer='rest',
-             context=SubscriptionsPathAdapter)
+             context=IntegrationProviderPathAdapter,
+             name="subscriptions")
 class AddSubscriptionView(SubscriptionViewMixin,
                           AbstractAuthenticatedView,
                           ModeledContentUploadRequestUtilsMixin):
 
+    def readInput(self, value=None):
+        input = super(AddSubscriptionView, self).readInput(value=value)
+        input.setdefault("MimeType", SubscriptionRequest.mimeType)
+        return input
+
+    def _subscriber(self):
+        subpath = self.request.subpath
+        if len(subpath) < 2:
+            raise_json_error(self.request,
+                             hexc.HTTPUnprocessableEntity,
+                             {
+                                 'message': _(u"Must specify a object type and event in url."),
+                             },
+                             None)
+        subscriber_name = "%s.%s" % (subpath[0], subpath[1])
+        subscriber = component.queryAdapter(self.request,
+                                            IWebhookSubscriber,
+                                            name=subscriber_name)
+        if subscriber is None:
+            raise_json_error(self.request,
+                             hexc.HTTPUnprocessableEntity,
+                             {
+                                 'message': _(u"Unsupported object and event type combination"),
+                             },
+                             None)
+        return subscriber
+
     def _do_call(self):
         creator = self.remoteUser
         subscription = self.readCreateUpdateContentObject(creator)
-
-        principal_id = IPrincipal(creator).id
-
         site_manager = getSite().getSiteManager()
+        subscriber = self._subscriber()
 
         internal_subscription = \
-            subscribe_to_resource(site_manager,
-                                  to=subscription.target,
-                                  for_=subscription.for_,
-                                  when=subscription.when,
-                                  dialect_id=get_integration_provider(self.request),
-                                  owner_id=principal_id,
-                                  permission_id=ACT_VIEW_EVENTS.id)
+            subscriber.subscribe(site_manager,
+                                 subscription.target)
 
         # TODO: could use a different externalizer by defining
         #   `_v_nti_render_externalizable_name` on the request
@@ -109,8 +129,7 @@ class AddSubscriptionView(SubscriptionViewMixin,
              renderer='rest',
              context=IWebhookSubscription,
              permission=nauth.ACT_DELETE)
-class DeleteSubscriptionView(SubscriptionViewMixin,
-                             UGDDeleteView):
+class DeleteSubscriptionView(UGDDeleteView):
 
     def _do_delete_object(self, theObject):
         del theObject.__parent__[theObject.__name__]
@@ -120,7 +139,8 @@ class DeleteSubscriptionView(SubscriptionViewMixin,
 @view_config(route_name='objects.generic.traversal',
              request_method='GET',
              renderer='rest',
-             context=SubscriptionsPathAdapter)
+             context=IntegrationProviderPathAdapter,
+             name="subscriptions")
 class ListSubscriptions(SubscriptionViewMixin,
                         AbstractAuthenticatedView,
                         BatchingUtilsMixin):
@@ -161,12 +181,13 @@ class ListSubscriptions(SubscriptionViewMixin,
         subscriptions = [subscription
                          for _, sub_manager in utilities_in_current_site
                          for subscription in sub_manager.values()
-                         if has_permission(ACT_READ, subscription, self.remoteUser)]
+                         if checkPermission(ACT_READ.id, subscription)]
 
         reverse = self.sortOrder == "descending"
         return sorted(subscriptions, key=attrgetter(self.sortOn), reverse=reverse)
 
     def __call__(self, site=None):
+        self._predicate()
         result = LocatedExternalDict()
         items = self.get_subscriptions()
         self._batch_items_iterable(result, items)

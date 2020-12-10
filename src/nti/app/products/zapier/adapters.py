@@ -8,18 +8,30 @@ from __future__ import absolute_import
 from zope import component
 from zope import interface
 
+from zope.cachedescriptors.property import Lazy
+
+from zope.security.interfaces import IPrincipal
+
 from zope.lifecycleevent import IObjectAddedEvent
 
-from nti.app.products.zapier.interfaces import EVENT_USER_CREATE
+from nti.app.authentication import get_remote_user
+
+from nti.app.products.zapier.authorization import ACT_VIEW_EVENTS
+
+from nti.app.products.zapier.interfaces import EVENT_USER_CREATED
 
 from nti.app.products.zapier.model import UserDetails
 from nti.app.products.zapier.model import UserCreatedEvent
+
+from nti.app.products.zapier.traversal import get_integration_provider
 
 from nti.coremetadata.interfaces import IUser
 
 from nti.dataserver.users.interfaces import IFriendlyNamed
 
 from nti.mailer.interfaces import IEmailAddressable
+
+from nti.webhooks.api import subscribe_to_resource
 
 from nti.webhooks.interfaces import IWebhookPayload
 
@@ -44,7 +56,37 @@ def _user_payload(user):
     details.createdTime = getattr(user, 'createdTime', 0)
     details.last_login = getattr(user, 'lastLoginTime', None)
 
-    payload = UserCreatedEvent(event_type=EVENT_USER_CREATE,
+    payload = UserCreatedEvent(event_type=EVENT_USER_CREATED,
                                data = details)
     interface.alsoProvides(payload, IWebhookPayload)
     return payload
+
+
+class AbstractWebhookSubscriber(object):
+
+    def __init__(self, request):
+        self.request = request
+
+    @Lazy
+    def owner_id(self):
+        return IPrincipal(get_remote_user(self.request)).id
+
+    @Lazy
+    def dialect_id(self):
+        return get_integration_provider(self.request)
+
+    def subscribe(self, context, target):
+        webhook_subscription = \
+            subscribe_to_resource(context,
+                                  to=target,
+                                  for_=self.for_,
+                                  when=self.when,
+                                  dialect_id=self.dialect_id,
+                                  owner_id=self.owner_id,
+                                  permission_id=ACT_VIEW_EVENTS.id)
+        return webhook_subscription
+
+
+class UserCreatedWebhookSubscriber(AbstractWebhookSubscriber):
+    for_ = IUser
+    when = IObjectAddedEvent

@@ -7,7 +7,7 @@ Auth Verification
 =================
 Not sure we have an existing call that does what we're after here. I believe logon.ping was suggested, but unfortunately it doesn't return any user data and also doesn't 401 in the case of invalid credentials.  logon.nti.password returns 401 with invalid credientials, but doesn't return user info on success, so we may need to implement our own here and have a view that returns the currently authenticated user.
 
-GET ``/dataserver2/api/zapier/users/me``
+GET ``/dataserver2/zapier/users/me``
 
 Response
 --------
@@ -29,48 +29,15 @@ Subscription Management
 
 Add Subscription
 ----------------
-POST ``/dataserver2/api/zapier/subscriptions/``
+POST ``/dataserver2/zapier/subscriptions/user/created``
+POST ``/dataserver2/zapier/subscriptions/user/enrolled``
+POST ``/dataserver2/zapier/subscriptions/course/created``
+POST ``/dataserver2/zapier/subscriptions/course/completed``
 
 
 Request
 ~~~~~~~
-An ``IExternalSubscription`` object, currently one of the following options:
-``IUserCreatedSubscription``, ``ICourseCreatedSubscription``,
-``IUserEnrolledSubscription``, or ``ICourseCompletedSubscription``.  A mime
-type will be required to distinguish which to create and provide for field
-validation. Objects and their fields are listed below:
-
-``IExternalSubscription``
-    Represents a subscription from an external source that we should notify on
-    certain events.  Serves as a base for the creatable subscription types
-    listed below.
-
-    :event_type: One of: user.create, user.enroll, course.create, course.complete
-    :target: The url to POST object data to when the trigger fires.
-
-``IUserCreatedSubscription``
-    :MimeType:  application/vnd.nextthought.api.subscription.usercreated
-
-``ICourseCreatedSubscription``
-    :MimeType:  application/vnd.nextthought.api.subscription.coursecreated
-
-``IUserEnrolledSubscription``
-    :MimeType:  application/vnd.nextthought.api.subscription.userenrolled
-    :user_filter: Used for user.enroll or course.complete. Specifies a username
-        to which the subscription should be restricted.
-    :course_filter: Used for user.enroll or course.complete. Specifies a course id (ntiid)
-        to which the subscription should be restricted.
-
-``ICourseCompletedSubscription``
-    :MimeType:  application/vnd.nextthought.api.subscription.usercreated
-    :user_filter: Used for user.enroll or course.complete. Specifies a username
-        to which the subscription should be restricted.
-    :course_filter: Used for user.enroll or course.complete. Specifies a course id (ntiid)
-        to which the subscription should be restricted.
-
-TODO: How would one hook into the subscription firing mechanisms to allow
-filtering?  Would this be an extension of the current subscription implementation
-and override of the ``__call__`` method?
+Create a subscription for the object and event type provided in the url.
 
 Response
 ~~~~~~~~
@@ -79,11 +46,13 @@ Success: ``201 Created``
 Returns an ``ISubscriptionDetails`` object for the newly created subscription.
 
 ``ISubscriptionDetails``
-    :event_type:  The event type used to create the subscription.
+    :event_type:  The event type used to create the subscription.  One of:
+        user.create, user.enroll, course.create, course.complete
     :target:  The url to POST object data to when the trigger fires.
-    :owner:  Owner of the subscription.
+    :owner_id:  Owner of the subscription.
     :created: When the subscription was first created (ISO formatted date).
     :active:  Whether it's active.
+    :status: Current status of the subscription
     :href:  Location of the subscription.
 
 Will likely need to extend the current subscription to allow storage of
@@ -204,7 +173,7 @@ Actions
 
 Create New User
 ---------------
-POST ``/dataserver2/api/zapier/users/``
+POST ``/dataserver2/zapier/users/``
 
 If we go the invitation route, do all sites have appropriate templates in place for this?  Going the other way (creating new users without a password) we'll need an updated template for new user creation that provides a link to set their initial password.  If we use the password recovery mechanism currently in place, we may also want to use a different landing page that doesn't say "Reset Password".
 
@@ -223,7 +192,7 @@ The ``IUserDetails`` corresponding with the newly created user.
 
 Enroll User in Course
 ---------------------
-POST ``/dataserver2/api/zapier/enrollments``
+POST ``/dataserver2/zapier/enrollments``
 
 Request
 ~~~~~~~
@@ -242,7 +211,7 @@ Search
 
 Search User
 -----------
-GET ``/dataserver2/api/zapier/user_search``
+GET ``/dataserver2/zapier/user_search``
 
 Request
 ~~~~~~~
@@ -263,7 +232,7 @@ Returns an item list of ``IUserDetails`` objects.
 
 Search Course
 -------------
-GET ``/dataserver2/api/zapier/course_search``
+GET ``/dataserver2/zapier/course_search``
 
 Request
 ~~~~~~~
