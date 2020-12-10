@@ -23,7 +23,7 @@ import os
 import sys
 import pkg_resources
 sys.path.append(os.path.abspath('../src'))
-rqmt = pkg_resources.require('nti.app.products.zapier ')[0]
+rqmt = pkg_resources.require('nti.app.products.zapier')[0]
 
 # -- General configuration ------------------------------------------------
 
@@ -37,10 +37,8 @@ needs_sphinx = "1.8"
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.intersphinx',
-    'sphinx.ext.todo',
     'sphinx.ext.viewcode',
     'repoze.sphinx.autointerface',
-    'nti_sphinx_questions'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
