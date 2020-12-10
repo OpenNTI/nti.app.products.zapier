@@ -18,10 +18,15 @@
         for="nti.coremetadata.interfaces.IUser zope.lifecycleevent.interfaces.IObjectAddedEvent"
         handler="nti.webhooks.subscribers.dispatch_webhook_event" />
 
+    <!-- Adapters -->
     <adapter factory=".adapters._user_payload"
              for="nti.coremetadata.interfaces.IUser"
              provides="nti.webhooks.interfaces.IWebhookPayload"
              name="zapier-webhook-delivery"/>
+    <adapter factory=".adapters.UserCreatedWebhookSubscriber"
+             for="pyramid.interfaces.IRequest"
+             provides=".interfaces.IWebhookSubscriber"
+             name="user.created"/>
 
     <!-- Traversal -->
     <adapter factory=".traversal.IntegrationProviderPathAdapter"
@@ -30,10 +35,6 @@
              name="zapier" />
     <adapter factory="nti.traversal.traversal.DefaultAdapterTraversable"
              for=".traversal.IntegrationProviderPathAdapter pyramid.interfaces.IRequest" />
-    <adapter factory=".traversal.SubscriptionsPathAdapter"
-             for=".traversal.IntegrationProviderPathAdapter pyramid.interfaces.IRequest"
-             provides="zope.traversing.interfaces.IPathAdapter"
-             name="subscriptions" />
 
     <utility factory=".utils.ZapierWebhookDialect" name="zapier"/>
 
@@ -56,8 +57,8 @@
     <include package="nti.externalization" />
 
     <ext:registerAutoPackageIO
-        root_interfaces=".interfaces.IUserCreatedEvent
-                         .interfaces.IUserCreatedSubscription
+        root_interfaces=".interfaces.ISubscriptionRequest
+                         .interfaces.IUserCreatedEvent
                          .interfaces.IUserDetails"
         modules=".model" />
 

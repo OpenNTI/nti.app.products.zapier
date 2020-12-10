@@ -16,9 +16,7 @@ from zope.traversing.interfaces import IPathAdapter
 
 from nti.coremetadata.interfaces import AUTHENTICATED_GROUP_NAME
 
-from nti.dataserver.authorization import ACT_CREATE
 from nti.dataserver.authorization import ACT_READ
-from nti.dataserver.authorization import ROLE_SITE_ADMIN
 
 from nti.dataserver.authorization_acl import ace_allowing
 from nti.dataserver.authorization_acl import acl_from_aces
@@ -43,17 +41,6 @@ class IntegrationProviderPathAdapter(Contained):
                ACE_DENY_ALL]
         result = acl_from_aces(acl)
         return result
-
-
-@interface.implementer(IPathAdapter)
-class SubscriptionsPathAdapter(Contained):
-
-    __name__ = "subscriptions"
-
-    def __init__(self, context, request):
-        self.context = context
-        self.request = request
-        self.__parent__ = context
 
 
 def get_integration_provider(request):
