@@ -34,6 +34,8 @@ from nti.appserver.policies.interfaces import IRequireSetPassword
 from nti.dataserver.authorization import is_admin
 from nti.dataserver.authorization import is_site_admin
 
+from nti.externalization import to_external_object
+
 logger = __import__('logging').getLogger(__name__)
 
 
@@ -76,4 +78,5 @@ def create_user(request):
     logger.debug("Notifying of creation of new user %s", new_user)
     notify(UserCreatedByAdminWithRequestEvent(new_user, request))
 
-    return IUserDetails(new_user)
+    return to_external_object(IUserDetails(new_user),
+                              policy_name='zapier')

@@ -30,6 +30,8 @@ from nti.coremetadata.interfaces import IUser
 
 from nti.dataserver.users.interfaces import IFriendlyNamed
 
+from nti.externalization.datetime import datetime_from_timestamp
+
 from nti.mailer.interfaces import IEmailAddressable
 
 from nti.webhooks.api import subscribe_to_resource
@@ -58,15 +60,25 @@ def _user_payload(user):
     return payload
 
 
+def _ts_to_datetime(timestamp):
+    if timestamp is None:
+        return None
+    return datetime_from_timestamp(timestamp)
+
+
 @component.adapter(IUser)
 @interface.implementer(IUserDetails)
 def _details_from_user(user):
+    last_login = _ts_to_datetime(getattr(user, 'lastLoginTime', None))
+    last_seen = _ts_to_datetime(getattr(user, 'lastSeenTime', None))
+    created_time = getattr(user, 'createdTime', None)
+
     details = UserDetails(username=user.username,
                           email=_email_for_user(user),
-                          name=_realname_for_user(user))
-
-    details.createdTime = getattr(user, 'createdTime', 0)
-    details.lastLogin = getattr(user, 'lastLoginTime', None)
+                          name=_realname_for_user(user),
+                          createdTime=created_time,
+                          lastLogin=last_login,
+                          lastSeen=last_seen)
 
     details.user = user
 
