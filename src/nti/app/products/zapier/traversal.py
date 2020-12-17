@@ -45,3 +45,11 @@ class IntegrationProviderPathAdapter(Contained):
 
 def get_integration_provider(request):
     return getattr(request, "_integration_provider", None)
+
+
+class ZapierUsersPathAdapter(Contained):
+
+    __name__ = "users"
+
+    def __init__(self, context, _unused_request):
+        self.__parent__ = context
