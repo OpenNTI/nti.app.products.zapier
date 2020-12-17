@@ -27,6 +27,7 @@ from nti.schema.field import HTTPURL
 from nti.schema.field import Object
 from nti.schema.field import ValidChoice
 from nti.schema.field import ValidTextLine
+from nti.schema.field import ValidDatetime
 
 EVENT_USER_CREATED = u"user.created"
 EVENT_USER_ENROLLED = u"user.enrolled"
@@ -57,7 +58,13 @@ class IUserDetails(ICreatedTime):
                         required=False,
                         constraint=checkRealname)
 
-    lastLogin = interface.Attribute("The last login time")
+    lastLogin = ValidDatetime(title=u"Last login",
+                              description=u"Last login time.",
+                              required=False)
+
+    lastSeen = ValidDatetime(title=u"Last seen",
+                             description=u"The latest record of user activity.",
+                             required=False)
 
 
 class ISubscriptionRequest(ICreated):

@@ -67,9 +67,8 @@
     <include package="nti.externalization" file="meta.zcml" />
     <include package="nti.externalization" />
 
-    <adapter factory=".externalization.ZapierUserDetailsExternalizer"
-             for=".interfaces.IUserDetails"
-             provides="nti.externalization.interfaces.IInternalObjectExternalizer" />
+    <utility component="nti.webhooks.externalization.ISODateExternalizationPolicy"
+             name="zapier" />
 
     <ext:registerAutoPackageIO
         root_interfaces=".interfaces.ISubscriptionRequest

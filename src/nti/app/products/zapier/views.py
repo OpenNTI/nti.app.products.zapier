@@ -45,6 +45,8 @@ from nti.dataserver.authorization import ACT_READ
 from nti.dataserver.authorization import is_admin
 from nti.dataserver.authorization import is_site_admin
 
+from nti.externalization import to_external_object
+
 from nti.externalization.interfaces import LocatedExternalDict
 from nti.externalization.interfaces import StandardExternalFields
 
@@ -67,7 +69,8 @@ logger = __import__('logging').getLogger(__name__)
 class AuthenticatedUserView(AbstractAuthenticatedView):
 
     def __call__(self):
-        return IUserDetails(self.remoteUser)
+        return to_external_object(IUserDetails(self.remoteUser),
+                                  policy_name='zapier')
 
 
 class SubscriptionViewMixin(object):
