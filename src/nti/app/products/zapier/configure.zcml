@@ -67,7 +67,7 @@
     <include package="nti.externalization" file="meta.zcml" />
     <include package="nti.externalization" />
 
-    <utility component="nti.webhooks.externalization.ISODateExternalizationPolicy"
+    <utility component=".externalization.ISODateExternalizationPolicy"
              name="zapier" />
 
     <ext:registerAutoPackageIO
