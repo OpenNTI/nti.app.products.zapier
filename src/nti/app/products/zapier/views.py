@@ -31,6 +31,7 @@ from nti.app.externalization.view_mixins import ModeledContentUploadRequestUtils
 from nti.app.products.zapier import MessageFactory as _
 
 from nti.app.products.zapier.interfaces import IWebhookSubscriber
+from nti.app.products.zapier.interfaces import IUserDetails
 
 from nti.app.products.zapier.model import SubscriptionRequest
 
@@ -55,6 +56,18 @@ TOTAL = StandardExternalFields.TOTAL
 ITEM_COUNT = StandardExternalFields.ITEM_COUNT
 
 logger = __import__('logging').getLogger(__name__)
+
+
+@view_config(route_name='objects.generic.traversal',
+             request_method='GET',
+             renderer='rest',
+             context=IntegrationProviderPathAdapter,
+             permission=ACT_READ,
+             name="resolve_me")
+class AuthenticatedUserView(AbstractAuthenticatedView):
+
+    def __call__(self):
+        return IUserDetails(self.remoteUser)
 
 
 class SubscriptionViewMixin(object):

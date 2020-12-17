@@ -57,7 +57,7 @@ class IUserDetails(ICreatedTime):
                         required=False,
                         constraint=checkRealname)
 
-    last_login = interface.Attribute("The last login time")
+    lastLogin = interface.Attribute("The last login time")
 
 
 class ISubscriptionRequest(ICreated):
@@ -68,9 +68,9 @@ class ISubscriptionRequest(ICreated):
 
 class IExternalEvent(interface.Interface):
 
-    event_type = ValidChoice(title=u"Event Type",
-                             vocabulary=EVENT_VOCABULARY,
-                             required=True)
+    eventType = ValidChoice(title=u"Event Type",
+                            vocabulary=EVENT_VOCABULARY,
+                            required=True)
 
     data = Attribute(u"The data object for the external event.")
 

@@ -19,6 +19,7 @@ from nti.app.authentication import get_remote_user
 from nti.app.products.zapier.authorization import ACT_VIEW_EVENTS
 
 from nti.app.products.zapier.interfaces import EVENT_USER_CREATED
+from nti.app.products.zapier.interfaces import IUserDetails
 
 from nti.app.products.zapier.model import UserDetails
 from nti.app.products.zapier.model import UserCreatedEvent
@@ -49,17 +50,27 @@ def _realname_for_user(user):
 @component.adapter(IUser, IObjectAddedEvent)
 @interface.implementer(IWebhookPayload)
 def _user_payload(user):
+    details = IUserDetails(user)
+
+    payload = UserCreatedEvent(eventType=EVENT_USER_CREATED,
+                               data = details)
+    interface.alsoProvides(payload, IWebhookPayload)
+    return payload
+
+
+@component.adapter(IUser)
+@interface.implementer(IUserDetails)
+def _details_from_user(user):
     details = UserDetails(username=user.username,
                           email=_email_for_user(user),
                           name=_realname_for_user(user))
 
     details.createdTime = getattr(user, 'createdTime', 0)
-    details.last_login = getattr(user, 'lastLoginTime', None)
+    details.lastLogin = getattr(user, 'lastLoginTime', None)
 
-    payload = UserCreatedEvent(event_type=EVENT_USER_CREATED,
-                               data = details)
-    interface.alsoProvides(payload, IWebhookPayload)
-    return payload
+    details.user = user
+
+    return details
 
 
 class AbstractWebhookSubscriber(object):
