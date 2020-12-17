@@ -27,6 +27,9 @@
              for="pyramid.interfaces.IRequest"
              provides=".interfaces.IWebhookSubscriber"
              name="user.created"/>
+    <adapter factory=".adapters._details_from_user"
+             for="nti.coremetadata.interfaces.IUser"
+             provides=".interfaces.IUserDetails"/>
 
     <!-- Traversal -->
     <adapter factory=".traversal.IntegrationProviderPathAdapter"
@@ -51,10 +54,16 @@
     <subscriber factory="nti.appserver.pyramid_renderers_edit_link_decorator.EditLinkDecorator"
                 provides="nti.externalization.interfaces.IExternalMappingDecorator"
                 for="nti.webhooks.subscriptions.PersistentSubscription pyramid.interfaces.IRequest" />
+	<subscriber factory=".decorators._EnglishFirstAndLastNameDecorator"
+				provides="nti.externalization.interfaces.IExternalMappingDecorator" />
 
     <!-- Externalization -->
     <include package="nti.externalization" file="meta.zcml" />
     <include package="nti.externalization" />
+
+    <adapter factory=".externalization.ZapierUserDetailsExternalizer"
+             for=".interfaces.IUserDetails"
+             provides="nti.externalization.interfaces.IInternalObjectExternalizer" />
 
     <ext:registerAutoPackageIO
         root_interfaces=".interfaces.ISubscriptionRequest

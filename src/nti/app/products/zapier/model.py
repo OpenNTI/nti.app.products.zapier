@@ -25,7 +25,7 @@ from nti.schema.schema import SchemaConfigured
 class UserCreatedEvent(SchemaConfigured):
     createDirectFieldProperties(IUserCreatedEvent)
 
-    mime_type = mimeType = 'application/vnd.nextthought.api.event.usercreated'
+    mime_type = mimeType = 'application/vnd.nextthought.zapier.event.usercreated'
 
 
 @WithRepr
@@ -33,7 +33,7 @@ class UserCreatedEvent(SchemaConfigured):
 class UserDetails(SchemaConfigured):
     createDirectFieldProperties(IUserDetails)
 
-    mime_type = mimeType = 'application/vnd.nextthought.api.userdetails'
+    mime_type = mimeType = 'application/vnd.nextthought.zapier.userdetails'
 
 
 @WithRepr
@@ -41,6 +41,6 @@ class UserDetails(SchemaConfigured):
 class SubscriptionRequest(SchemaConfigured):
     createDirectFieldProperties(ISubscriptionRequest)
 
-    mime_type = mimeType = 'application/vnd.nextthought.webhooks.subscription.request'
+    mime_type = mimeType = 'application/vnd.nextthought.zapier.subscription.request'
 
     target = alias('to')

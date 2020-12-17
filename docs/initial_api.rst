@@ -5,23 +5,25 @@ Zapier API
 
 Auth Verification
 =================
-Not sure we have an existing call that does what we're after here. I believe logon.ping was suggested, but unfortunately it doesn't return any user data and also doesn't 401 in the case of invalid credentials.  logon.nti.password returns 401 with invalid credientials, but doesn't return user info on success, so we may need to implement our own here and have a view that returns the currently authenticated user.
+Returns the details for the currently authenticated user.
 
-GET ``/dataserver2/zapier/users/me``
+GET ``/dataserver2/zapier/resolve_me``
 
 Response
 --------
-For Zapier, we seem to need a non-empty response here with the user information.
 Return an ``IUserDetails`` instance containing the following info:
 
 ``IUserDetails``
+    :Class:
+    :MimeType:
     :username:
     :email:
     :name:
-    :noni18n_firstname:
-    :noni18n_lastname:
-    :created:
-    :last_login:
+    :nonI18NFirstName:
+    :nonI18NLastName:
+    :createdTime:
+    :lastLogin:
+    :lastSeen:
 
 
 Subscription Management
@@ -46,17 +48,17 @@ Success: ``201 Created``
 Returns an ``ISubscriptionDetails`` object for the newly created subscription.
 
 ``ISubscriptionDetails``
-    :event_type:  The event type used to create the subscription.  One of:
+    :eventType:  The event type used to create the subscription.  One of:
         user.create, user.enroll, course.create, course.complete
     :target:  The url to POST object data to when the trigger fires.
-    :owner_id:  Owner of the subscription.
-    :created: When the subscription was first created (ISO formatted date).
+    :ownerId:  Owner of the subscription.
+    :createdTime: When the subscription was first created (ISO formatted date).
     :active:  Whether it's active.
     :status: Current status of the subscription
     :href:  Location of the subscription.
 
 Will likely need to extend the current subscription to allow storage of
-``event_type`` data.  This could, to a limited degree, be derived from the
+``eventType`` data.  This could, to a limited degree, be derived from the
 subscriptions ``for`` and ``when`` data, but we may not want to
 expose that, and wouldn't match what was used during creation anyway.
 
@@ -81,7 +83,7 @@ Triggers
 ========
 .. note:: It might be useful to include items from the subscription that
     initiated the trigger in the events sent.  We can probably deduce
-    ``event_type``, but the ``href`` of the subscription, for example, might
+    ``eventType``, but the ``href`` of the subscription, for example, might
     also be good to include.
 
 New User Created
@@ -95,7 +97,7 @@ Request
 Sends an ``IUserCreatedEvent`` containing the details of the newly created user:
 
 ``IUserCreatedEvent``
-    :event_type: ``user.create``
+    :eventType: ``user.create``
     :data:  Contains an ``object`` attribute with the ``IUserDetails`` of the
         created user.
 
@@ -110,17 +112,17 @@ Request
 Sends an ``ICourseCreatedEvent`` containing the details of the newly created course.
 
 ``ICourseCreatedEvent``
-    :event_type:  ``course.create``
+    :eventType:  ``course.create``
     :data:  Contains an ``object`` attribute with the ``ICourseDetails`` of the
         created course.
 
 ``ICourseDetails``
     :id: NTIID of course instance
-    :provider_id:
+    :providerId:
     :title:
     :description:
-    :start_date:
-    :end_date:
+    :startDate:
+    :endDate:
 
 
 New Enrollment Created
@@ -134,7 +136,7 @@ Request
 Sends an ``IUserEnrolledEvent`` containing the enrollment information.
 
 ``IUserEnrolledEvent``
-    :event_type: ``user.enroll``
+    :eventType: ``user.enroll``
     :data: Contains an ``object`` attribute with the ``ICourseEnrollmentDetails``
         with user and course info.
 
@@ -159,7 +161,7 @@ Request
 Sends an ``ICourseCompletedEvent`` containing the completion info:
 
 ``ICourseCompletedEvent``
-    :event_type: ``course.complete``
+    :eventType: ``course.complete``
     :data: Contains an ``object`` attribute with the ``ICourseCompletionDetails``
         with user and course info.
 
@@ -198,7 +200,7 @@ Request
 ~~~~~~~
 
 :username:
-:course_id:
+:courseId:
 :scope:
 
 Response
