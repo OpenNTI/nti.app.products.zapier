@@ -177,7 +177,12 @@ Create New User
 ---------------
 POST ``/dataserver2/zapier/users/``
 
-If we go the invitation route, do all sites have appropriate templates in place for this?  Going the other way (creating new users without a password) we'll need an updated template for new user creation that provides a link to set their initial password.  If we use the password recovery mechanism currently in place, we may also want to use a different landing page that doesn't say "Reset Password".
+Create a new user with the given information.  This will send an email to the
+newly created user with a link to finish setting up their account.  A
+``success`` param is required to use as the base url to provide for this
+purpose.  This will need to be a page that submits the ``username`` and ``id``
+provided as parameters in the link to the `/dataserver2/logon.reset.passcode`
+view.
 
 Request
 ~~~~~~~
