@@ -45,12 +45,13 @@ class TestUserPrincipalPermissionMap(ApplicationLayerTest):
             site_name = site.__name__
             set_user_creation_site(admin, site_name)
             prm = IPrincipalRoleManager(site)
-            prm.assignRoleToPrincipal(ROLE_SITE_ADMIN_NAME, admin)
+            prm.assignRoleToPrincipal(ROLE_SITE_ADMIN_NAME, admin.username)
 
             # A user that cannot administer "not.site.admin"
             diff_site_admin = self._get_user('diff.site.admin')
             set_user_creation_site(diff_site_admin, 'janux.ou.edu')
-            prm.assignRoleToPrincipal(ROLE_SITE_ADMIN_NAME, diff_site_admin)
+            prm.assignRoleToPrincipal(ROLE_SITE_ADMIN_NAME,
+                                      diff_site_admin.username)
 
             # User to check against
             not_admin = self._get_user('not.site.admin')
