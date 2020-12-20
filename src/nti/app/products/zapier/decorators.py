@@ -36,7 +36,7 @@ class _EnglishFirstAndLastNameDecorator(Singleton):
     """
 
     def decorateExternalMapping(self, original, external):
-        realname = original.name
+        realname = original.Realname
         if not realname or '@' in realname:
             return
 
@@ -49,5 +49,5 @@ class _EnglishFirstAndLastNameDecorator(Singleton):
             last = human_name.last or human_name.first
             first = human_name.first or human_name.last
             if first:
-                external['nonI18NFirstName'] = first
-                external['nonI18NLastName'] = last
+                external['NonI18NFirstName'] = first
+                external['NonI18NLastName'] = last

@@ -14,8 +14,6 @@ from zope.schema import vocabulary
 
 from zope.traversing.interfaces import IPathAdapter
 
-from nti.appserver.workspaces import IWorkspace
-
 from nti.base.interfaces import ICreated
 from nti.base.interfaces import ICreatedTime
 
@@ -46,23 +44,23 @@ EVENT_VOCABULARY = vocabulary.SimpleVocabulary(
 
 class IUserDetails(ICreatedTime):
 
-    username = DecodingValidTextLine(title=u'The username', min_length=5)
+    Username = DecodingValidTextLine(title=u'The username', min_length=5)
 
-    email = ValidTextLine(title=u'Email',
+    Email = ValidTextLine(title=u'Email',
                           description=u'',
                           required=False,
                           constraint=checkEmailAddress)
 
-    name = TextLine(title=u'Your name',
+    Realname = TextLine(title=u'Your name',
                         description=u"Your full name",
                         required=False,
                         constraint=checkRealname)
 
-    lastLogin = ValidDatetime(title=u"Last login",
+    LastLogin = ValidDatetime(title=u"Last login",
                               description=u"Last login time.",
                               required=False)
 
-    lastSeen = ValidDatetime(title=u"Last seen",
+    LastSeen = ValidDatetime(title=u"Last seen",
                              description=u"The latest record of user activity.",
                              required=False)
 
