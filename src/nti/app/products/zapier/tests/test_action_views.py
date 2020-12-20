@@ -28,11 +28,7 @@ class TestCreateUser(ApplicationLayerTest):
 
     default_origin = 'https://alpha.nextthought.com'
 
-    def _test_success(self, **kwargs):
-        data = {'Username': 'booradley',
-                'realname': 'Arthur Radley',
-                'email': 'boo@maycomb.com'}
-
+    def _call_FUT(self, data, **kwargs):
         success = urllib_parse.quote_plus('https://alpha.nextthought.com/reset')
         path = b'/dataserver2/zapier/users?success=%s' % (success,)
 
@@ -40,12 +36,21 @@ class TestCreateUser(ApplicationLayerTest):
                                      data,
                                      **kwargs)
 
+        return res
+
+    def _test_success(self, **kwargs):
+        data = {'Username': 'booradley',
+                'Realname': 'Arthur Radley',
+                'Email': 'boo@maycomb.com'}
+
+        res = self._call_FUT(data, **kwargs)
+
         assert_that(res.json_body, has_entries({
-            "username": "booradley",
-            "email": "boo@maycomb.com",
-            "name": "Arthur Radley",
-            "lastSeen": not_none(),
-            "lastLogin": not_none(),
+            "Username": "booradley",
+            "Email": "boo@maycomb.com",
+            "Realname": "Arthur Radley",
+            "LastSeen": not_none(),
+            "LastLogin": not_none(),
         }))
 
     @WithSharedApplicationMockDS(users=("site.admin",),
@@ -67,6 +72,54 @@ class TestCreateUser(ApplicationLayerTest):
                                  default_authenticate=True)
     def test_platform_admin(self):
         self._test_success()
+
+    @WithSharedApplicationMockDS(users=True,
+                                 testapp=True,
+                                 default_authenticate=True)
+    def test_no_username(self):
+        data = {'Realname': 'Arthur Radley',
+                'Email': 'boo@maycomb.com'}
+
+        res = self._call_FUT(data, status=422)
+
+        body = res.json_body
+        assert_that(body, has_entries({
+            "code": "RequiredMissing",
+            'field': 'Username',
+            "message": "Username",
+        }))
+
+    @WithSharedApplicationMockDS(users=True,
+                                 testapp=True,
+                                 default_authenticate=True)
+    def test_no_realname(self):
+        data = {'Username': 'booradley',
+                'Email': 'boo@maycomb.com'}
+
+        res = self._call_FUT(data, status=422)
+
+        body = res.json_body
+        assert_that(body, has_entries({
+            "code": "RequiredMissing",
+            "field": "Realname",
+            "message": "Missing data",
+        }))
+
+    @WithSharedApplicationMockDS(users=True,
+                                 testapp=True,
+                                 default_authenticate=True)
+    def test_no_email(self):
+        data = {'Username': 'booradley',
+                'Realname': 'Arthur Radley'}
+
+        res = self._call_FUT(data, status=422)
+
+        body = res.json_body
+        assert_that(body, has_entries({
+            "code": "RequiredMissing",
+            'field': 'Email',
+            "message": "Missing data",
+        }))
 
     @WithSharedApplicationMockDS(users=("joe.schmoe",),
                                  testapp=True)

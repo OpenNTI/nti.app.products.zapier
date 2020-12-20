@@ -16,14 +16,14 @@ Return an ``IUserDetails`` instance containing the following info:
 ``IUserDetails``
     :Class:
     :MimeType:
-    :username:
-    :email:
-    :name:
-    :nonI18NFirstName:
-    :nonI18NLastName:
-    :createdTime:
-    :lastLogin:
-    :lastSeen:
+    :Username:
+    :Email:
+    :Realname:
+    :NonI18NFirstName:
+    :NonI18NLastName:
+    :CreatedTime:
+    :LastLogin:
+    :LastSeen:
 
 
 Subscription Management
@@ -188,9 +188,9 @@ Request
 ~~~~~~~
 Success: ``201 Created``
 
-:username:
-:email:
-:realname:
+:Username:
+:Email:
+:Realname:
 
 Response
 ~~~~~~~~

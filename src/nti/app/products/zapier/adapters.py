@@ -73,12 +73,12 @@ def _details_from_user(user):
     last_seen = _ts_to_datetime(getattr(user, 'lastSeenTime', None))
     created_time = getattr(user, 'createdTime', None)
 
-    details = UserDetails(username=user.username,
-                          email=_email_for_user(user),
-                          name=_realname_for_user(user),
+    details = UserDetails(Username=user.username,
+                          Email=_email_for_user(user),
+                          Realname=_realname_for_user(user),
                           createdTime=created_time,
-                          lastLogin=last_login,
-                          lastSeen=last_seen)
+                          LastLogin=last_login,
+                          LastSeen=last_seen)
 
     details.user = user
 
