@@ -54,8 +54,8 @@ def _realname_for_user(user):
 def _user_payload(user):
     details = IUserDetails(user)
 
-    payload = UserCreatedEvent(eventType=EVENT_USER_CREATED,
-                               data = details)
+    payload = UserCreatedEvent(EventType=EVENT_USER_CREATED,
+                               Data=details)
     interface.alsoProvides(payload, IWebhookPayload)
     return payload
 

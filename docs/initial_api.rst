@@ -97,8 +97,8 @@ Request
 Sends an ``IUserCreatedEvent`` containing the details of the newly created user:
 
 ``IUserCreatedEvent``
-    :eventType: ``user.create``
-    :data:  Contains an ``object`` attribute with the ``IUserDetails`` of the
+    :EventType: ``user.create``
+    :Data:  Contains an ``object`` attribute with the ``IUserDetails`` of the
         created user.
 
 
