@@ -45,16 +45,16 @@ Response
 ~~~~~~~~
 Success: ``201 Created``
 
-Returns an ``ISubscriptionDetails`` object for the newly created subscription.
+Returns an ``WebhookSubscription`` object for the newly created subscription.
 
-``ISubscriptionDetails``
-    :eventType:  The event type used to create the subscription.  One of:
+``WebhookSubscription``
+    :EventType:  The event type used to create the subscription.  One of:
         user.create, user.enroll, course.create, course.complete
-    :target:  The url to POST object data to when the trigger fires.
-    :ownerId:  Owner of the subscription.
-    :createdTime: When the subscription was first created (ISO formatted date).
-    :active:  Whether it's active.
-    :status: Current status of the subscription
+    :Target:  The url to POST object data to when the trigger fires.
+    :OwnerId:  Owner of the subscription.
+    :CreatedTime: When the subscription was first created (ISO formatted date).
+    :Active:  Whether it's active.
+    :Status: Current status of the subscription
     :href:  Location of the subscription.
 
 Will likely need to extend the current subscription to allow storage of
@@ -81,7 +81,7 @@ using with `nti.webhooks`.
 
 Triggers
 ========
-.. note:: It might be useful to include items from the subscription that
+.. note:: It might be useful to include details of the subscription that
     initiated the trigger in the events sent.  We can probably deduce
     ``eventType``, but the ``href`` of the subscription, for example, might
     also be good to include.
