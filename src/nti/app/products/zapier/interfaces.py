@@ -73,11 +73,11 @@ class ISubscriptionRequest(ICreated):
 
 class IExternalEvent(interface.Interface):
 
-    eventType = ValidChoice(title=u"Event Type",
+    EventType = ValidChoice(title=u"Event Type",
                             vocabulary=EVENT_VOCABULARY,
                             required=True)
 
-    data = Attribute(u"The data object for the external event.")
+    Data = Attribute(u"The data object for the external event.")
 
 
 class IUserCreatedEvent(IExternalEvent):
@@ -85,7 +85,7 @@ class IUserCreatedEvent(IExternalEvent):
     Sent to any applicable external subscriptions when a user is added.
     """
 
-    data = Object(IUserDetails,
+    Data = Object(IUserDetails,
                   title=u"Information for the newly created user.",
                   required=True)
 
