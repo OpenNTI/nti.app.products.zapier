@@ -134,11 +134,14 @@ class AddSubscriptionView(SubscriptionViewMixin,
             subscriber.subscribe(site_manager,
                                  subscription.target)
 
-        # TODO: could use a different externalizer by defining
-        #   `_v_nti_render_externalizable_name` on the request
         self.request.response.status_int = 201
-        return internal_subscription
 
+        # Choose our externalizer to conform to our docs
+        ext_obj = to_external_object(internal_subscription,
+                                     policy_name='zapier',
+                                     name="zapier-webhook")
+
+        return ext_obj
 
 @view_config(route_name='objects.generic.traversal',
              request_method='DELETE',
