@@ -222,19 +222,34 @@ GET ``/dataserver2/zapier/user_search``
 
 Request
 ~~~~~~~
-Our current user search api is limited to 1000 results.  Since I'm sure we
-could have sites with many thousands, does allowing paging here cause
-performance issues?  Should we continue to limit results in a similar way, or
-allow paging, similar to the course search?  Also, should we limit to users
-only (vs FL/DFLs)?
-
-:filter:  Filter string used to search for matches by username, alias, and
-    real name, depending on site policies.
-
+Search terms are sent via additional path info after the view, e.g.
+`/dataserver2/zapier/user_search/collin`.  Currently limited to 1000 results,
+and no paging is performed.
 
 Response
 ~~~~~~~~
-Returns an item list of ``IUserDetails`` objects.
+Returns an item list of ``IUserDetails`` objects, e.g.:
+
+.. code-block:: json
+
+    {
+        "Items": [
+            {
+                "Class": "UserDetails",
+                "CreatedTime": "2020-08-11T17:02:29Z",
+                "Email": "bobby.hagen+atest@nextthought.com",
+                "LastLogin": "2020-08-11T17:02:30Z",
+                "LastSeen": "2020-08-11T17:02:30Z",
+                "MimeType": "application/vnd.nextthought.zapier.userdetails",
+                "NonI18NFirstName": "ATest",
+                "NonI18NLastName": "Student",
+                "Realname": "ATest Student",
+                "Username": "atest.student"
+            }
+        ],
+        "Last Modified": 0,
+        "href": "/dataserver2/zapier/user_search/atest"
+    }
 
 
 Search Course
