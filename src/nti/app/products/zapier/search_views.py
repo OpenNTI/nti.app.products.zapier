@@ -13,6 +13,8 @@ from nti.app.products.zapier.traversal import IntegrationProviderPathAdapter
 
 from nti.appserver.usersearch_views import UserSearchView
 
+from nti.coremetadata.interfaces import IUser
+
 from nti.dataserver.authorization import ACT_SEARCH
 
 from nti.externalization import to_external_object
@@ -39,8 +41,14 @@ class ZapierUserSearchView(UserSearchView):
     # TODO: May want to move this to a context under the
     #   host site, once we add that context for user creation
 
-    users_only = True
+    def filter_result(self, all_results):
+        results = []
+        for result in all_results:
+            if IUser.providedBy(result):
+                 results.append(IUserDetails(result))
+        return super(ZapierUserSearchView, self).filter_result(results)
 
-    def item_externalizer(self, remote_user):
-        return _user_externalizer()
+    def externalize_objects(self, results):
+        return [to_external_object(user_details, policy_name='zapier')
+                for user_details in results]
 
