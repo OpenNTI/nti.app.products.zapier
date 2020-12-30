@@ -17,6 +17,7 @@ from zope.traversing.interfaces import IPathAdapter
 from nti.coremetadata.interfaces import AUTHENTICATED_GROUP_NAME
 
 from nti.dataserver.authorization import ACT_READ
+from nti.dataserver.authorization import ACT_SEARCH
 
 from nti.dataserver.authorization_acl import ace_allowing
 from nti.dataserver.authorization_acl import acl_from_aces
@@ -38,6 +39,7 @@ class IntegrationProviderPathAdapter(Contained):
 
     def __acl__(self):
         acl = [ace_allowing(AUTHENTICATED_GROUP_NAME, ACT_READ, type(self)),
+               ace_allowing(AUTHENTICATED_GROUP_NAME, ACT_SEARCH, type(self)),
                ACE_DENY_ALL]
         result = acl_from_aces(acl)
         return result
