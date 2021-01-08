@@ -31,15 +31,19 @@ Subscription Management
 
 Add Subscription
 ----------------
-POST ``/dataserver2/zapier/subscriptions/user/created``
-POST ``/dataserver2/zapier/subscriptions/user/enrolled``
-POST ``/dataserver2/zapier/subscriptions/course/created``
-POST ``/dataserver2/zapier/subscriptions/course/completed``
+| POST ``/dataserver2/zapier/subscriptions/user/created``
+| POST ``/dataserver2/zapier/subscriptions/user/enrolled``
+| POST ``/dataserver2/zapier/subscriptions/course/created``
+| POST ``/dataserver2/zapier/subscriptions/course/completed``
 
+Creates a subscription for the object and event type provided in the url.
 
 Request
 ~~~~~~~
-Create a subscription for the object and event type provided in the url.
+
+:target: Target URL to which a ``POST`` request will be sent with the details of
+    the event, when triggered (see :ref:`Triggers` for the corresponding event
+    type)
 
 Response
 ~~~~~~~~
@@ -186,15 +190,16 @@ view.
 
 Request
 ~~~~~~~
-Success: ``201 Created``
 
-:Username:
-:Email:
-:Realname:
+:Username: Username for the user to be created.
+:Email: Email address for the user to be created.
+:Realname: Real name for the user to be created.
 
 Response
 ~~~~~~~~
-The ``IUserDetails`` corresponding with the newly created user.
+Success: ``201 Created``
+
+The body will contain ``IUserDetails`` for the newly created user.
 
 
 Enroll User in Course
