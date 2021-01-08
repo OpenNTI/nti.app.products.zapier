@@ -7,6 +7,7 @@ from __future__ import print_function
 
 from hamcrest import assert_that
 from hamcrest import has_entries
+from hamcrest import has_length
 from hamcrest import not_none
 
 from nti.dataserver.tests import mock_dataserver as mock_ds
@@ -45,3 +46,58 @@ class TestResolveMe(ApplicationLayerTest):
     def test_failure(self):
         self.testapp.get(b'/dataserver2/zapier/resolve_me',
                          status=401)
+
+
+class TestSubscriptions(ApplicationLayerTest):
+
+    default_origin = 'https://alpha.nextthought.com'
+
+    def _create_subscription(self, obj_type, event_type, target_url, **kwargs):
+        path = b'/dataserver2/zapier/subscriptions/%s/%s' % (obj_type, event_type)
+        res = self.testapp.post_json(path,
+                                     {
+                                         "target": target_url
+                                     },
+                                     **kwargs)
+        return res
+
+    @WithSharedApplicationMockDS(users=True,
+                                 testapp=True,
+                                 default_authenticate=True)
+    def test_create(self):
+        target_url = "https://localhost/handle_new_user"
+        res = self._create_subscription("user", "created", target_url)
+
+        assert_that(res.json_body, has_entries({
+            "Target": target_url,
+            "Id": not_none(),
+            "OwnerId": self.extra_environ_default_user.lower(),
+            "CreatedTime": not_none(),
+            "Active": True,
+            "Status": "Active",
+            "href": not_none(),
+        }))
+
+    @WithSharedApplicationMockDS(users=True,
+                                 testapp=True,
+                                 default_authenticate=True)
+    def test_list(self):
+        target_url = "https://localhost/handle_new_user"
+        self._create_subscription("user", "created", target_url)
+
+        res = self.testapp.get(b'/dataserver2/zapier/subscriptions')
+        body = res.json_body
+        assert_that(body, has_entries({
+            "Items": has_length(1)
+        }))
+
+        assert_that(body["Items"][0], has_entries({
+            "Target": target_url,
+            "Id": not_none(),
+            "OwnerId": self.extra_environ_default_user.lower(),
+            "CreatedTime": not_none(),
+            "Active": True,
+            "Status": "Active",
+            "href": not_none(),
+        }))
+

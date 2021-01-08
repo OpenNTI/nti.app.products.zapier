@@ -211,4 +211,7 @@ class ListSubscriptions(SubscriptionViewMixin,
         items = self.get_subscriptions()
         self._batch_items_iterable(result, items)
         result[TOTAL] = result[ITEM_COUNT]
-        return result
+
+        return to_external_object(result,
+                                  policy_name='zapier',
+                                  name="zapier-webhook")
