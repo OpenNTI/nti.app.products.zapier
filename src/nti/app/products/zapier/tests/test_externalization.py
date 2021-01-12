@@ -50,6 +50,7 @@ class TestExternalization(ZapierTestCase):
             "CreatedTime": datetime_to_string(obj.created),
             "Active": obj.active,
             "Status": obj.status_message,
+            "DialectId": obj.dialect_id,
             "href": not_none(),
         }))
 
@@ -61,6 +62,7 @@ class TestExternalization(ZapierTestCase):
             "owner_id"
             "status_message",
             "to",
+            "dialect_id",
         )
         for key in removed_keys:
             assert_that(ext_obj, not_(has_key(key)), key)

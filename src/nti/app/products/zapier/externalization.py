@@ -43,7 +43,7 @@ class SubscriptionExternalizer(InterfaceObjectIO):
         'for_', 'when',
         # Redundant IDCTimes data
         'created', 'modified',
-        'dialect_id', 'attempt_limit', 'permission_id'
+        'attempt_limit', 'permission_id'
     }) | InterfaceObjectIO._excluded_out_ivars_
 
     EXT_FIELD_MAP = {
@@ -53,6 +53,7 @@ class SubscriptionExternalizer(InterfaceObjectIO):
         "owner_id": "OwnerId",
         "status_message": "Status",
         "to": "Target",
+        "dialect_id": "DialectId"
     }
 
     def toExternalObject(self, *args, **kwargs): # pylint:disable=signature-differs
