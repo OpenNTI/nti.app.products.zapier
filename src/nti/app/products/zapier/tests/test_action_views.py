@@ -7,7 +7,9 @@ from __future__ import print_function
 
 from hamcrest import assert_that
 from hamcrest import has_entries
+from hamcrest import has_length
 from hamcrest import not_none
+from nti.app.products.zapier import ZAPIER
 
 from six.moves import urllib_parse
 
@@ -29,8 +31,18 @@ class TestCreateUser(ApplicationLayerTest):
     default_origin = 'https://alpha.nextthought.com'
 
     def _call_FUT(self, data, **kwargs):
+        path = b'/dataserver2/service'
+        extra_environ = kwargs.get('extra_environ', None)
+        res = self.testapp.get(path, extra_environ=extra_environ)
+
+        zapier_ws = [ws for ws in res.json_body['Items'] if ws['Title'] == ZAPIER]
+        assert_that(zapier_ws, has_length(1))
+        zapier_ws = zapier_ws[0]
+
+        create_users_href = self.require_link_href_with_rel(zapier_ws,
+                                                            'create_user')
         success = urllib_parse.quote_plus('https://alpha.nextthought.com/reset')
-        path = b'/dataserver2/zapier/users?success=%s' % (success,)
+        path = b'%s?success=%s' % (create_users_href, success,)
 
         res = self.testapp.post_json(path,
                                      data,
@@ -129,7 +141,7 @@ class TestCreateUser(ApplicationLayerTest):
             joe = self._get_user('joe.schmoe')
             joe_env = self._make_extra_environ(joe.username)
 
-        path = b'/dataserver2/zapier/users'
+        path = b'/dataserver2/++etc++hostsites/alpha.nextthought.com/++etc++site/default/authentication/users'
 
         unauth_env = self._make_extra_environ(username=None)
         self.testapp.post_json(path, status=401,

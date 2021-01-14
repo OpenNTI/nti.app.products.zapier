@@ -11,8 +11,6 @@ from pyramid import httpexceptions as hexc
 
 from pyramid.view import view_config
 
-from nti.app.authentication import get_remote_user
-
 from nti.app.externalization.error import raise_json_error
 
 from nti.app.externalization.internalization import read_body_as_external_object
@@ -24,12 +22,11 @@ from nti.app.products.zapier.interfaces import IUserDetails
 
 from nti.app.products.zapier.model import UserDetails
 
-from nti.app.products.zapier.traversal import ZapierUsersPathAdapter
+from nti.app.products.zapier.traversal import UsersPathAdapter
 
 from nti.appserver.account_creation_views import create_account_as_admin
 
-from nti.dataserver.authorization import is_admin
-from nti.dataserver.authorization import is_site_admin
+from nti.dataserver import authorization as nauth
 
 from nti.externalization import to_external_object
 
@@ -39,14 +36,11 @@ logger = __import__('logging').getLogger(__name__)
 
 
 @view_config(route_name='objects.generic.traversal',
-             context=ZapierUsersPathAdapter,
+             context=UsersPathAdapter,
              request_method='POST',
-             renderer='rest')
+             renderer='rest',
+             permission=nauth.ACT_MANAGE_SITE)
 def create_user(request):
-    remote_user = get_remote_user(request)
-    if not is_admin(remote_user) and not is_site_admin(remote_user):
-        raise hexc.HTTPForbidden(_('Cannot create users.'))
-
     externalValue = read_body_as_external_object(request)
 
     # Not required by the model, but required by the view
