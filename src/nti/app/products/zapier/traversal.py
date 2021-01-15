@@ -14,6 +14,8 @@ from zope.container.contained import Contained
 
 from zope.traversing.interfaces import IPathAdapter
 
+from nti.app.products.zapier import AUTH_USERS_PATH
+
 from nti.coremetadata.interfaces import AUTHENTICATED_GROUP_NAME
 
 from nti.dataserver.authorization import ACT_READ
@@ -49,9 +51,9 @@ def get_integration_provider(request):
     return getattr(request, "_integration_provider", None)
 
 
-class ZapierUsersPathAdapter(Contained):
+class UsersPathAdapter(Contained):
 
-    __name__ = "users"
+    __name__ = AUTH_USERS_PATH
 
     def __init__(self, context, _unused_request):
         self.__parent__ = context

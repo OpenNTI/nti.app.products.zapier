@@ -14,6 +14,8 @@ from zope.schema import vocabulary
 
 from zope.traversing.interfaces import IPathAdapter
 
+from nti.appserver.workspaces import IWorkspace
+
 from nti.base.interfaces import ICreated
 from nti.base.interfaces import ICreatedTime
 
@@ -108,3 +110,9 @@ class IWebhookSubscriber(interface.Interface):
 
         :return:  The stored webhook subscription
         """
+
+
+class IZapierWorkspace(IWorkspace):
+    """
+    A workspace for Zapier info and links.
+    """

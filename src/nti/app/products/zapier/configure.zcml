@@ -37,13 +37,15 @@
              provides="zope.traversing.interfaces.IPathAdapter"
              name="zapier" />
     <adapter factory="nti.traversal.traversal.DefaultAdapterTraversable"
-             for=".traversal.IntegrationProviderPathAdapter pyramid.interfaces.IRequest" />
-    <adapter factory=".traversal.ZapierUsersPathAdapter"
-             for=".traversal.IntegrationProviderPathAdapter pyramid.interfaces.IRequest"
+             for="nti.app.authentication.interfaces.ISiteAuthentication pyramid.interfaces.IRequest" />
+    <adapter factory=".traversal.UsersPathAdapter"
+             for="nti.app.authentication.interfaces.ISiteAuthentication pyramid.interfaces.IRequest"
              provides="zope.traversing.interfaces.IPathAdapter"
              name="users" />
-    <adapter factory="nti.traversal.traversal.DefaultAdapterTraversable"
-             for=".traversal.ZapierUsersPathAdapter pyramid.interfaces.IRequest" />
+	<adapter name="zapier"
+			 for="nti.dataserver.interfaces.IUser pyramid.interfaces.IRequest"
+			 factory=".workspaces._zapier_workspace_for_user"
+			 provides="zope.traversing.interfaces.IPathAdapter" />
 
     <utility factory=".utils.ZapierWebhookDialect" name="zapier"/>
 
@@ -65,6 +67,15 @@
 -->
 	<subscriber factory=".decorators._EnglishFirstAndLastNameDecorator"
 				provides="nti.externalization.interfaces.IExternalMappingDecorator" />
+
+	<!-- Workspaces -->
+	<!-- A subscriber for enumeration -->
+	<subscriber factory=".workspaces.ZapierWorkspace"
+				provides=".interfaces.IZapierWorkspace" />
+
+	<!-- And an adapter for direct access -->
+	<adapter factory=".workspaces.ZapierWorkspace"
+			 provides=".interfaces.IZapierWorkspace" />
 
     <!-- Externalization -->
     <adapter factory=".externalization.SubscriptionExternalizer"
