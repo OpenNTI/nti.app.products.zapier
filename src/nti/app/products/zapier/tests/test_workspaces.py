@@ -14,6 +14,7 @@ from zope import component
 
 from nti.app.authentication.interfaces import ISiteAuthentication
 
+from nti.app.products.zapier import AUTH_USERS_PATH
 from nti.app.products.zapier import ZAPIER
 
 from nti.app.products.zapier.interfaces import IZapierWorkspace
@@ -56,8 +57,9 @@ class TestWorkspaces(ApplicationLayerTest):
             ]
             workspace = workspaces[0]
 
-            assert_that(traversal.resource_path(workspace),
-                        is_('/dataserver2/users/e.sobeck/zapier'))
+            ws_traversal_path = traversal.resource_path(workspace)
+            assert_that(ws_traversal_path,
+                        is_('/dataserver2/users/e.sobeck/' + ZAPIER))
             assert_that(workspace.name, is_(ZAPIER))
 
             # Collections
@@ -70,10 +72,11 @@ class TestWorkspaces(ApplicationLayerTest):
             ws_ext = to_external_object(workspace)
             create_user_link = self.link_with_rel(ws_ext, 'create_user')
             assert_that(create_user_link['method'], is_('POST'))
-            assert_that(create_user_link['href'], is_(site_auth_path + '/users'))
+            assert_that(create_user_link['href'], is_(site_auth_path + '/'
+                                                      + AUTH_USERS_PATH))
 
         user_env = self._make_extra_environ(username=username)
-        self.testapp.get('/dataserver2/users/e.sobeck/zapier',
+        self.testapp.get(ws_traversal_path,
                          extra_environ=user_env,
                          status=200)
 
