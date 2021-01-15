@@ -179,7 +179,15 @@ Actions
 
 Create New User
 ---------------
-POST ``/dataserver2/zapier/users/``
+POST ``/dataserver2/++etc++hostsites/{site-name}/++etc++site/default/authentication/users``
+
+The link for this should be obtained from the service document located at
+``/dataserver2/service``.  This will provide a set of workspaces, one of which
+is the ``zapier`` workspace.  This workspace provides a link with a rel of
+``create_user`` under the ``Links`` element.  The ``href`` from this will
+provide the proper url.  The workspace can also be accessed off of the user at
+``/dataserver2/users/{authenticated_username}/zapier``, where the
+``authenticated_username`` variable will need replaced with the
 
 Create a new user with the given information.  This will send an email to the
 newly created user with a link to finish setting up their account.  A
@@ -228,7 +236,7 @@ GET ``/dataserver2/zapier/user_search``
 Request
 ~~~~~~~
 Search terms are sent via additional path info after the view, e.g.
-`/dataserver2/zapier/user_search/collin`.  Currently limited to 1000 results,
+`/dataserver2/zapier/user_search/atest`.  Currently limited to 1000 results,
 and no paging is performed.
 
 Response
