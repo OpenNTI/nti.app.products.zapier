@@ -58,13 +58,12 @@
         for="nti.webhooks.interfaces.IWebhookSubscription zope.lifecycleevent.interfaces.IObjectAddedEvent"
         handler=".subscribers.apply_security_to_subscription" />
 
-    <!-- Decorators -->
+    <!-- Provide appropriate permissions for our nti admins to receive user events -->
+	<grant
+		role="role:nti.admin"
+		permission="nti.actions.view_events" />
 
-<!--
-    <subscriber factory="nti.appserver.pyramid_renderers_edit_link_decorator.EditLinkDecorator"
-                provides="nti.externalization.interfaces.IExternalMappingDecorator"
-                for="nti.webhooks.subscriptions.PersistentSubscription pyramid.interfaces.IRequest" />
--->
+    <!-- Decorators -->
 	<subscriber factory=".decorators._EnglishFirstAndLastNameDecorator"
 				provides="nti.externalization.interfaces.IExternalMappingDecorator" />
 
