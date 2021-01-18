@@ -15,6 +15,7 @@ from nti.dataserver.tests import mock_dataserver as mock_ds
 from nti.app.testing.application_webtest import ApplicationLayerTest
 
 from nti.app.testing.decorators import WithSharedApplicationMockDS
+from nti.ntiids.ntiids import find_object_with_ntiid
 
 
 class TestResolveMe(ApplicationLayerTest):
@@ -77,6 +78,29 @@ class TestSubscriptions(ApplicationLayerTest):
             "Status": "Active",
             "href": not_none(),
         }))
+
+    @WithSharedApplicationMockDS(users=True,
+                                 testapp=True,
+                                 default_authenticate=True)
+    def test_admin_created_subscriptions_fire(self):
+        target_url = "https://localhost/handle_new_user"
+        res = self._create_subscription("user", "created", target_url)
+
+        subscription_ntiid = res.json_body['Id']
+        with mock_ds.mock_db_trans(site_name="alpha.nextthought.com"):
+            subscription = find_object_with_ntiid(subscription_ntiid)
+            assert_that(subscription, has_length(0))
+
+        with mock_ds.mock_db_trans(site_name="alpha.nextthought.com"):
+            import uuid
+            self._create_user(uuid.uuid4().hex,
+                              external_value={
+                                  u'realname': u'Admin Created Test',
+                              })
+
+        with mock_ds.mock_db_trans(site_name="alpha.nextthought.com"):
+            subscription = find_object_with_ntiid(subscription_ntiid)
+            assert_that(subscription, has_length(1))
 
     @WithSharedApplicationMockDS(users=True,
                                  testapp=True,
