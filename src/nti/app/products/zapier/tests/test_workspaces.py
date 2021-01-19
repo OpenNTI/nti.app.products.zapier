@@ -98,11 +98,9 @@ class TestWorkspaces(ApplicationLayerTest):
             x for x in res['Items'] if x.get('Title') == ZAPIER
         ]
         assert_that(workspaces, has_length(1))
-        workspace = workspaces[0]
+        ws_ext = workspaces[0]
 
         # Links
-        ws_ext = to_external_object(workspace)
-
         with mock_ds.mock_db_trans():
             ds_path = traversal.resource_path(self.ds.dataserver_folder)
 
@@ -110,16 +108,25 @@ class TestWorkspaces(ApplicationLayerTest):
                           'resolve_me',
                           'GET',
                           '/'.join((ds_path, ZAPIER_PATH, RESOLVE_ME)))
-        self.require_link(ws_ext,
-                          USER_SEARCH,
-                          'GET',
-                          site_auth_path + '/' + USER_SEARCH)
+
+        if site_auth_path:
+            self.require_link(ws_ext,
+                              USER_SEARCH,
+                              'GET',
+                              site_auth_path + '/' + USER_SEARCH)
+
+            if include_admin_links:
+                self.require_link(ws_ext,
+                                  'create_user',
+                                  'POST',
+                                  site_auth_path + '/' + AUTH_USERS_PATH)
+            else:
+                self.forbid_link_with_rel(ws_ext, 'create_user')
+        else:
+            self.forbid_link_with_rel(ws_ext, USER_SEARCH)
+            self.forbid_link_with_rel(ws_ext, 'create_user')
 
         if include_admin_links:
-            self.require_link(ws_ext,
-                              'create_user',
-                              'POST',
-                              site_auth_path + '/' + AUTH_USERS_PATH)
             self.require_link(ws_ext,
                               SUBSCRIPTIONS_VIEW,
                               'GET',
@@ -128,14 +135,22 @@ class TestWorkspaces(ApplicationLayerTest):
                               'create_subscription',
                               'POST',
                               '/'.join((ds_path, ZAPIER_PATH, SUBSCRIPTIONS_VIEW)))
+        else:
+            self.forbid_link_with_rel(ws_ext, SUBSCRIPTIONS_VIEW)
+            self.forbid_link_with_rel(ws_ext, 'create_subscription')
+
+    @WithSharedApplicationMockDS(users=True,
+                                 testapp=True)
+    def test_links_admin_no_site_auth(self):
+        extra_env = self._make_extra_environ(HTTP_ORIGIN="http://localhost")
+        self._test_links(None,
+                         include_admin_links=True,
+                         extra_environ=extra_env)
 
     @WithSharedApplicationMockDS(users=True,
                                  testapp=True)
     def test_links_admin(self):
         with mock_ds.mock_db_trans(self.ds, site_name="alpha.nextthought.com"):
-            username = self.extra_environ_default_user
-            self._assign_role(ROLE_ADMIN.id, username=username)
-
             site_auth = component.getUtility(ISiteAuthentication)
             site_auth_path = traversal.resource_path(site_auth)
 
