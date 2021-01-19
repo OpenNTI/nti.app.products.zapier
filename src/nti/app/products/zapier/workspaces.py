@@ -65,8 +65,6 @@ class _ZapierWorkspace(Contained):
 
     @property
     def links(self):
-        site_auth = component.getUtility(ISiteAuthentication)
-
         links = list()
         links.append(Link(self._ds_folder(),
                           rel='resolve_me',
@@ -74,18 +72,20 @@ class _ZapierWorkspace(Contained):
                           elements=(ZAPIER_PATH,
                                     "resolve_me")))
 
-        username = self.user.username
-        if has_permission(nauth.ACT_MANAGE_SITE, site_auth, username):
-            links.append(Link(site_auth,
-                              rel='create_user',
-                              method='POST',
-                              elements=(AUTH_USERS_PATH,)))
+        site_auth = component.queryUtility(ISiteAuthentication)
+        if site_auth is not None:
+            username = self.user.username
+            if has_permission(nauth.ACT_MANAGE_SITE, site_auth, username):
+                links.append(Link(site_auth,
+                                  rel='create_user',
+                                  method='POST',
+                                  elements=(AUTH_USERS_PATH,)))
 
-        if has_permission(nauth.ACT_SEARCH, site_auth, username):
-            links.append(Link(site_auth,
-                              rel=USER_SEARCH,
-                              method='GET',
-                              elements=(USER_SEARCH,)))
+            if has_permission(nauth.ACT_SEARCH, site_auth, username):
+                links.append(Link(site_auth,
+                                  rel=USER_SEARCH,
+                                  method='GET',
+                                  elements=(USER_SEARCH,)))
 
         if is_admin_or_site_admin(self.user):
             links.append(Link(self._ds_folder(),
