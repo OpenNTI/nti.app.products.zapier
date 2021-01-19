@@ -29,6 +29,7 @@ from nti.app.externalization.view_mixins import BatchingUtilsMixin
 from nti.app.externalization.view_mixins import ModeledContentUploadRequestUtilsMixin
 
 from nti.app.products.zapier import MessageFactory as _
+from nti.app.products.zapier import SUBSCRIPTIONS_VIEW
 
 from nti.app.products.zapier.interfaces import IWebhookSubscriber
 from nti.app.products.zapier.interfaces import IUserDetails
@@ -92,7 +93,7 @@ class SubscriptionViewMixin(object):
              request_method='POST',
              renderer='rest',
              context=IntegrationProviderPathAdapter,
-             name="subscriptions")
+             name=SUBSCRIPTIONS_VIEW)
 class AddSubscriptionView(SubscriptionViewMixin,
                           AbstractAuthenticatedView,
                           ModeledContentUploadRequestUtilsMixin):
@@ -143,6 +144,7 @@ class AddSubscriptionView(SubscriptionViewMixin,
 
         return ext_obj
 
+
 @view_config(route_name='objects.generic.traversal',
              request_method='DELETE',
              renderer='rest',
@@ -159,7 +161,7 @@ class DeleteSubscriptionView(UGDDeleteView):
              request_method='GET',
              renderer='rest',
              context=IntegrationProviderPathAdapter,
-             name="subscriptions")
+             name=SUBSCRIPTIONS_VIEW)
 class ListSubscriptions(SubscriptionViewMixin,
                         AbstractAuthenticatedView,
                         BatchingUtilsMixin):

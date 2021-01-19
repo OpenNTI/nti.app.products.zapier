@@ -10,17 +10,31 @@ from hamcrest import has_entries
 from hamcrest import has_length
 from hamcrest import not_none
 
-from nti.dataserver.tests import mock_dataserver as mock_ds
+from nti.app.products.zapier.tests import ZapierTestMixin
 
 from nti.app.testing.application_webtest import ApplicationLayerTest
 
 from nti.app.testing.decorators import WithSharedApplicationMockDS
 from nti.ntiids.ntiids import find_object_with_ntiid
 
+from nti.dataserver.tests import mock_dataserver as mock_ds
 
-class TestResolveMe(ApplicationLayerTest):
+from nti.ntiids.ntiids import find_object_with_ntiid
+
+
+class TestResolveMe(ApplicationLayerTest, ZapierTestMixin):
 
     default_origin = 'https://alpha.nextthought.com'
+
+    def _call_FUT(self, **kwargs):
+        workspace_kwargs = dict()
+        if 'extra_environ' in kwargs:
+            workspace_kwargs['extra_environ'] = kwargs['extra_environ']
+        path = self.get_workspace_link('resolve_me', **workspace_kwargs)
+
+        res = self.testapp.get(path, **kwargs)
+
+        return res
 
     @WithSharedApplicationMockDS(testapp=True)
     def test_success(self):
@@ -32,8 +46,7 @@ class TestResolveMe(ApplicationLayerTest):
                                          })
             user_env = self._make_extra_environ(boo_user.username)
 
-        res = self.testapp.get(b'/dataserver2/zapier/resolve_me',
-                               extra_environ=user_env)
+        res = self._call_FUT(extra_environ=user_env)
 
         assert_that(res.json_body, has_entries({
             u"Username": u"booradley",
@@ -49,12 +62,18 @@ class TestResolveMe(ApplicationLayerTest):
                          status=401)
 
 
-class TestSubscriptions(ApplicationLayerTest):
+class TestSubscriptions(ApplicationLayerTest, ZapierTestMixin):
 
     default_origin = 'https://alpha.nextthought.com'
 
     def _create_subscription(self, obj_type, event_type, target_url, **kwargs):
-        path = b'/dataserver2/zapier/subscriptions/%s/%s' % (obj_type, event_type)
+        workspace_kwargs = dict()
+        if 'extra_environ' in kwargs:
+            workspace_kwargs['extra_environ'] = kwargs['extra_environ']
+        base_create_path = self.get_workspace_link('create_subscription',
+                                                   **workspace_kwargs)
+
+        path = b'%s/%s/%s' % (base_create_path, obj_type, event_type)
         res = self.testapp.post_json(path,
                                      {
                                          "target": target_url
@@ -124,4 +143,3 @@ class TestSubscriptions(ApplicationLayerTest):
             "Status": "Active",
             "href": not_none(),
         }))
-

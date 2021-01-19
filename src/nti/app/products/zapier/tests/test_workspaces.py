@@ -12,10 +12,18 @@ from hamcrest import assert_that
 
 from zope import component
 
+from zope.component.hooks import getSite
+
+from zope.securitypolicy.interfaces import IPrincipalRoleManager
+
 from nti.app.authentication.interfaces import ISiteAuthentication
 
 from nti.app.products.zapier import AUTH_USERS_PATH
+from nti.app.products.zapier import RESOLVE_ME
+from nti.app.products.zapier import SUBSCRIPTIONS_VIEW
+from nti.app.products.zapier import USER_SEARCH
 from nti.app.products.zapier import ZAPIER
+from nti.app.products.zapier import ZAPIER_PATH
 
 from nti.app.products.zapier.interfaces import IZapierWorkspace
 
@@ -24,6 +32,9 @@ from nti.app.testing.application_webtest import ApplicationLayerTest
 from nti.app.testing.decorators import WithSharedApplicationMockDS
 
 from nti.appserver.workspaces.interfaces import IUserService
+
+from nti.dataserver.authorization import ROLE_ADMIN
+from nti.dataserver.authorization import ROLE_SITE_ADMIN
 
 from nti.dataserver.tests import mock_dataserver as mock_ds
 
@@ -38,7 +49,14 @@ class TestWorkspaces(ApplicationLayerTest):
 
     default_origin = 'http://alpha.nextthought.com'
 
-    @WithSharedApplicationMockDS(testapp=True)
+    def require_link(self, ws_ext, rel, method, href):
+        self.require_link_href_with_rel(ws_ext, rel)
+        create_user_link = self.link_with_rel(ws_ext, rel)
+        assert_that(create_user_link['method'], is_(method))
+        assert_that(create_user_link['href'], is_(href))
+
+    @WithSharedApplicationMockDS(users=True,
+                                 testapp=True)
     def test_workspace(self):
         with mock_ds.mock_db_trans(self.ds, site_name="alpha.nextthought.com"):
             user = self._create_user(username='e.sobeck',
@@ -65,18 +83,98 @@ class TestWorkspaces(ApplicationLayerTest):
             # Collections
             assert_that(workspace.collections, has_length(0))
 
-            # Links
-            site_auth = component.getUtility(ISiteAuthentication)
-            site_auth_path = traversal.resource_path(site_auth)
-
-            ws_ext = to_external_object(workspace)
-            create_user_link = self.link_with_rel(ws_ext, 'create_user')
-            assert_that(create_user_link['method'], is_('POST'))
-            assert_that(create_user_link['href'], is_(site_auth_path + '/'
-                                                      + AUTH_USERS_PATH))
-
         user_env = self._make_extra_environ(username=username)
         self.testapp.get(ws_traversal_path,
                          extra_environ=user_env,
                          status=200)
 
+    def _test_links(self,
+                    site_auth_path,
+                    include_admin_links=False,
+                    **kwargs):
+        res = self.testapp.get('/dataserver2/service', **kwargs)
+        res = res.json_body
+        workspaces = [
+            x for x in res['Items'] if x.get('Title') == ZAPIER
+        ]
+        assert_that(workspaces, has_length(1))
+        workspace = workspaces[0]
+
+        # Links
+        ws_ext = to_external_object(workspace)
+
+        with mock_ds.mock_db_trans():
+            ds_path = traversal.resource_path(self.ds.dataserver_folder)
+
+        self.require_link(ws_ext,
+                          'resolve_me',
+                          'GET',
+                          '/'.join((ds_path, ZAPIER_PATH, RESOLVE_ME)))
+        self.require_link(ws_ext,
+                          USER_SEARCH,
+                          'GET',
+                          site_auth_path + '/' + USER_SEARCH)
+
+        if include_admin_links:
+            self.require_link(ws_ext,
+                              'create_user',
+                              'POST',
+                              site_auth_path + '/' + AUTH_USERS_PATH)
+            self.require_link(ws_ext,
+                              SUBSCRIPTIONS_VIEW,
+                              'GET',
+                              '/'.join((ds_path, ZAPIER_PATH, SUBSCRIPTIONS_VIEW)))
+            self.require_link(ws_ext,
+                              'create_subscription',
+                              'POST',
+                              '/'.join((ds_path, ZAPIER_PATH, SUBSCRIPTIONS_VIEW)))
+
+    @WithSharedApplicationMockDS(users=True,
+                                 testapp=True)
+    def test_links_admin(self):
+        with mock_ds.mock_db_trans(self.ds, site_name="alpha.nextthought.com"):
+            username = self.extra_environ_default_user
+            self._assign_role(ROLE_ADMIN.id, username=username)
+
+            site_auth = component.getUtility(ISiteAuthentication)
+            site_auth_path = traversal.resource_path(site_auth)
+
+        self._test_links(site_auth_path, include_admin_links=True)
+
+    @WithSharedApplicationMockDS(testapp=True)
+    def test_links_site_admin(self):
+        with mock_ds.mock_db_trans(self.ds, site_name="alpha.nextthought.com"):
+            user = self._create_user(username='e.sobeck',
+                                     external_value={
+                                         'realname': u'Liz Sobeck',
+                                     })
+            username = user.username
+
+            site = getSite()
+            prm = IPrincipalRoleManager(site)
+            prm.assignRoleToPrincipal(ROLE_SITE_ADMIN.id, user.username)
+
+            site_auth = component.getUtility(ISiteAuthentication)
+            site_auth_path = traversal.resource_path(site_auth)
+
+        extra_environ = self._make_extra_environ(username)
+        self._test_links(site_auth_path,
+                         include_admin_links=True,
+                         extra_environ=extra_environ)
+
+    @WithSharedApplicationMockDS(testapp=True)
+    def test_links_non_admin(self):
+        with mock_ds.mock_db_trans(self.ds, site_name="alpha.nextthought.com"):
+            user = self._create_user(username='e.sobeck',
+                                     external_value={
+                                         'realname': u'Liz Sobeck',
+                                     })
+            username = user.username
+
+            site_auth = component.getUtility(ISiteAuthentication)
+            site_auth_path = traversal.resource_path(site_auth)
+
+        extra_environ = self._make_extra_environ(username)
+        self._test_links(site_auth_path,
+                         include_admin_links=False,
+                         extra_environ=extra_environ)

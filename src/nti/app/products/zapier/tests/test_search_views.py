@@ -11,26 +11,40 @@ from hamcrest import assert_that
 from hamcrest import has_entries
 from hamcrest import has_length
 
+from zope import component
+
+from nti.app.authentication.interfaces import ISiteAuthentication
+
+from nti.app.products.zapier import USER_SEARCH
+
 from nti.app.products.zapier.model import UserDetails
+
+from nti.app.products.zapier.tests import ZapierTestMixin
 
 from nti.app.testing.application_webtest import ApplicationLayerTest
 
 from nti.app.testing.decorators import WithSharedApplicationMockDS
 
-from nti.dataserver.tests import mock_dataserver
+from nti.dataserver.tests import mock_dataserver as mock_ds
 
 from nti.dataserver.users import DynamicFriendsList
 from nti.dataserver.users import FriendsList
 
 from nti.dataserver.users.interfaces import IFriendlyNamed
 
+from nti.traversal import traversal
 
-class TestSearchUsers(ApplicationLayerTest):
+
+class TestSearchUsers(ApplicationLayerTest, ZapierTestMixin):
 
     default_origin = 'https://alpha.nextthought.com'
 
     def _call_FUT(self, subpath, params=None, expected_length=None, **kwargs):
-        path = b'/dataserver2/zapier/@@user_search/%s' % (subpath,)
+        workspace_kwargs = {key: value for key, value in kwargs.items()
+                            if key == 'extra_environ'}
+        base_search_path = self.get_workspace_link(USER_SEARCH,
+                                                   **workspace_kwargs)
+        path = b'%s/%s' % (base_search_path, subpath)
 
         res = self.testapp.get(path, params, **kwargs)
 
@@ -41,7 +55,7 @@ class TestSearchUsers(ApplicationLayerTest):
 
     @WithSharedApplicationMockDS(users=True, testapp=True)
     def test_externalization(self):
-        with mock_dataserver.mock_db_trans():
+        with mock_ds.mock_db_trans():
             username = u"testuser-%s" % (uuid.uuid4(),)
             email = u'%s@nextthought.com' % (username,)
             realname = u"%s Test" % (username,)
@@ -66,7 +80,7 @@ class TestSearchUsers(ApplicationLayerTest):
                                  testapp=True,
                                  default_authenticate=True)
     def test_users_only(self):
-        with mock_dataserver.mock_db_trans():
+        with mock_ds.mock_db_trans():
             user1 = self.users['sjohnson@nextthought.com']
             user2 = self.users['user2']
 
@@ -93,7 +107,11 @@ class TestSearchUsers(ApplicationLayerTest):
         # Just need to test the view permissions, specifically that
         # auth/vs unauth'd users.  Base view should take care of
         # the rest
-        self._call_FUT('', status=401)
+        with mock_ds.mock_db_trans(self.ds, site_name="alpha.nextthought.com"):
+            site_auth = component.getUtility(ISiteAuthentication)
+            site_auth_path = traversal.resource_path(site_auth)
+
+        self.testapp.get(site_auth_path + '/' +  USER_SEARCH, status=401)
 
         user_env = self._make_extra_environ('user2')
         self._call_FUT('',
