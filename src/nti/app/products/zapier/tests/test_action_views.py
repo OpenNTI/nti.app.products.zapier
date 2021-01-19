@@ -7,15 +7,15 @@ from __future__ import print_function
 
 from hamcrest import assert_that
 from hamcrest import has_entries
-from hamcrest import has_length
 from hamcrest import not_none
-from nti.app.products.zapier import ZAPIER
 
 from six.moves import urllib_parse
 
 from zope.component.hooks import getSite
 
 from zope.securitypolicy.interfaces import IPrincipalRoleManager
+
+from nti.app.products.zapier.tests import ZapierTestMixin
 
 from nti.dataserver.authorization import ROLE_SITE_ADMIN_NAME
 
@@ -26,21 +26,16 @@ from nti.app.testing.application_webtest import ApplicationLayerTest
 from nti.app.testing.decorators import WithSharedApplicationMockDS
 
 
-class TestCreateUser(ApplicationLayerTest):
+class TestCreateUser(ApplicationLayerTest, ZapierTestMixin):
 
     default_origin = 'https://alpha.nextthought.com'
 
     def _call_FUT(self, data, **kwargs):
-        path = b'/dataserver2/service'
-        extra_environ = kwargs.get('extra_environ', None)
-        res = self.testapp.get(path, extra_environ=extra_environ)
-
-        zapier_ws = [ws for ws in res.json_body['Items'] if ws['Title'] == ZAPIER]
-        assert_that(zapier_ws, has_length(1))
-        zapier_ws = zapier_ws[0]
-
-        create_users_href = self.require_link_href_with_rel(zapier_ws,
-                                                            'create_user')
+        workspace_kwargs = dict()
+        if 'extra_environ' in kwargs:
+            workspace_kwargs['extra_environ'] = kwargs['extra_environ']
+        create_users_href = self.get_workspace_link('create_user',
+                                                    **workspace_kwargs)
         success = urllib_parse.quote_plus('https://alpha.nextthought.com/reset')
         path = b'%s?success=%s' % (create_users_href, success,)
 

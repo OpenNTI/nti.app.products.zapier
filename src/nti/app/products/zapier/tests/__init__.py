@@ -7,7 +7,12 @@ from __future__ import absolute_import
 
 import unittest
 
+from hamcrest import assert_that
+from hamcrest import has_length
+
 import zope
+
+from nti.app.products.zapier import ZAPIER
 
 from nti.dataserver.tests import DSInjectorMixin
 
@@ -45,3 +50,16 @@ class SharedConfiguringTestLayer(ZopeComponentLayer,
 
 class ZapierTestCase(unittest.TestCase):
     layer = SharedConfiguringTestLayer
+
+
+class ZapierTestMixin(object):
+
+    def get_workspace_link(self, rel_name, **kwargs):
+        path = b'/dataserver2/service'
+        res = self.testapp.get(path, **kwargs)
+        zapier_ws = [ws for ws in res.json_body['Items'] if ws['Title'] == ZAPIER]
+        assert_that(zapier_ws, has_length(1))
+        zapier_ws = zapier_ws[0]
+        create_users_href = self.require_link_href_with_rel(zapier_ws,
+                                                            rel_name)
+        return create_users_href

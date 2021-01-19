@@ -10,7 +10,6 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
 
-from nti.appserver.workspaces import IWorkspace
 from zope import component
 from zope import interface
 
@@ -20,12 +19,25 @@ from zope.container.contained import Contained
 
 from nti.app.authentication.interfaces import ISiteAuthentication
 
-from nti.app.products.zapier import ZAPIER
 from nti.app.products.zapier import AUTH_USERS_PATH
+from nti.app.products.zapier import SUBSCRIPTIONS_VIEW
+from nti.app.products.zapier import USER_SEARCH
+from nti.app.products.zapier import ZAPIER
+from nti.app.products.zapier import ZAPIER_PATH
 
 from nti.app.products.zapier.interfaces import IZapierWorkspace
 
+from nti.appserver.workspaces import IWorkspace
+
 from nti.appserver.workspaces.interfaces import IUserService
+
+from nti.coremetadata.interfaces import IDataserver
+
+from nti.dataserver.authorization import is_admin_or_site_admin
+
+from nti.dataserver.authorization_acl import has_permission
+
+from nti.dataserver import authorization as nauth
 
 from nti.links.links import Link
 
@@ -48,15 +60,45 @@ class _ZapierWorkspace(Contained):
     def collections(self):
         return ()
 
+    def _ds_folder(self):
+        return component.getUtility(IDataserver).dataserver_folder
+
     @property
     def links(self):
         site_auth = component.getUtility(ISiteAuthentication)
 
-        create_user = Link(site_auth,
-                           rel='create_user',
-                           method='POST',
-                           elements=(AUTH_USERS_PATH,))
-        return (create_user,)
+        links = list()
+        links.append(Link(self._ds_folder(),
+                          rel='resolve_me',
+                          method='GET',
+                          elements=(ZAPIER_PATH,
+                                    "resolve_me")))
+
+        username = self.user.username
+        if has_permission(nauth.ACT_MANAGE_SITE, site_auth, username):
+            links.append(Link(site_auth,
+                              rel='create_user',
+                              method='POST',
+                              elements=(AUTH_USERS_PATH,)))
+
+        if has_permission(nauth.ACT_SEARCH, site_auth, username):
+            links.append(Link(site_auth,
+                              rel=USER_SEARCH,
+                              method='GET',
+                              elements=(USER_SEARCH,)))
+
+        if is_admin_or_site_admin(self.user):
+            links.append(Link(self._ds_folder(),
+                              rel=SUBSCRIPTIONS_VIEW,
+                              method='GET',
+                              elements=(ZAPIER_PATH,
+                                        SUBSCRIPTIONS_VIEW)))
+            links.append(Link(self._ds_folder(),
+                              rel='create_subscription',
+                              method='POST',
+                              elements=(ZAPIER_PATH,
+                                        SUBSCRIPTIONS_VIEW)))
+        return tuple(links)
 
     def __getitem__(self, key):
         """

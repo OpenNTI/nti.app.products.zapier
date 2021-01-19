@@ -7,9 +7,11 @@ from __future__ import print_function
 
 from pyramid.view import view_config
 
-from nti.app.products.zapier.interfaces import IUserDetails
+from nti.app.authentication.interfaces import ISiteAuthentication
 
-from nti.app.products.zapier.traversal import IntegrationProviderPathAdapter
+from nti.app.products.zapier import USER_SEARCH
+
+from nti.app.products.zapier.interfaces import IUserDetails
 
 from nti.appserver.usersearch_views import UserSearchView
 
@@ -34,18 +36,16 @@ def _user_externalizer():
 @view_config(route_name='objects.generic.traversal',
              request_method='GET',
              renderer='rest',
-             context=IntegrationProviderPathAdapter,
+             context=ISiteAuthentication,
              permission=ACT_SEARCH,
-             name="user_search")
+             name=USER_SEARCH)
 class ZapierUserSearchView(UserSearchView):
-    # TODO: May want to move this to a context under the
-    #   host site, once we add that context for user creation
 
     def filter_result(self, all_results):
         results = []
         for result in all_results:
             if IUser.providedBy(result):
-                 results.append(IUserDetails(result))
+                results.append(IUserDetails(result))
         return super(ZapierUserSearchView, self).filter_result(results)
 
     def externalize_objects(self, results):
