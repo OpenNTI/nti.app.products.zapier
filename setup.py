@@ -62,6 +62,7 @@ setup(
         'setuptools',
         'pyramid',
         'requests',
+        'nti.app.products.courseware',
         'nti.coremetadata',
         'nti.dataserver',
         'nti.externalization',

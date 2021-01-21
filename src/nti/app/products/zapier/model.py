@@ -7,6 +7,7 @@ from __future__ import print_function
 
 from zope import interface
 
+from nti.app.products.zapier.interfaces import ICourseDetails
 from nti.app.products.zapier.interfaces import IUserCreatedEvent
 from nti.app.products.zapier.interfaces import IUserDetails
 from nti.app.products.zapier.interfaces import ISubscriptionRequest
@@ -34,6 +35,14 @@ class UserDetails(SchemaConfigured):
     createDirectFieldProperties(IUserDetails)
 
     mime_type = mimeType = 'application/vnd.nextthought.zapier.userdetails'
+
+
+@WithRepr
+@interface.implementer(ICourseDetails)
+class CourseDetails(SchemaConfigured):
+    createDirectFieldProperties(ICourseDetails)
+
+    mime_type = mimeType = 'application/vnd.nextthought.zapier.coursedetails'
 
 
 @WithRepr

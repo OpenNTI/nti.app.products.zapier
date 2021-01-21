@@ -30,6 +30,9 @@
     <adapter factory=".adapters._details_from_user"
              for="nti.coremetadata.interfaces.IUser"
              provides=".interfaces.IUserDetails"/>
+    <adapter factory=".adapters._details_from_catalog_entry"
+             for="nti.contenttypes.courses.interfaces.ICourseCatalogEntry"
+             provides=".interfaces.ICourseDetails"/>
 
     <!-- Traversal -->
     <adapter factory=".traversal.IntegrationProviderPathAdapter"
@@ -89,7 +92,8 @@
     <ext:registerAutoPackageIO
         root_interfaces=".interfaces.ISubscriptionRequest
                          .interfaces.IUserCreatedEvent
-                         .interfaces.IUserDetails"
+                         .interfaces.IUserDetails
+                         .interfaces.ICourseDetails"
         modules=".model" />
 
 </configure>

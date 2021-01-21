@@ -19,12 +19,16 @@ from nti.app.authentication import get_remote_user
 from nti.app.products.zapier.authorization import ACT_VIEW_EVENTS
 
 from nti.app.products.zapier.interfaces import EVENT_USER_CREATED
+from nti.app.products.zapier.interfaces import ICourseDetails
 from nti.app.products.zapier.interfaces import IUserDetails
 
+from nti.app.products.zapier.model import CourseDetails
 from nti.app.products.zapier.model import UserDetails
 from nti.app.products.zapier.model import UserCreatedEvent
 
 from nti.app.products.zapier.traversal import get_integration_provider
+
+from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
 from nti.coremetadata.interfaces import IUser
 
@@ -81,6 +85,28 @@ def _details_from_user(user):
                           LastSeen=last_seen)
 
     details.user = user
+
+    return details
+
+
+@component.adapter(ICourseCatalogEntry)
+@interface.implementer(ICourseDetails)
+def _details_from_catalog_entry(catalog_entry):
+    created_time = getattr(catalog_entry, 'createdTime', None)
+    last_modified = getattr(catalog_entry, 'lastModified', None)
+
+    details = CourseDetails(
+        Id=catalog_entry.ntiid,
+        ProviderId=catalog_entry.ProviderUniqueID,
+        StartDate=catalog_entry.StartDate,
+        EndDate=catalog_entry.EndDate,
+        Title=catalog_entry.title,
+        Description=catalog_entry.description,
+        createdTime=created_time,
+        lastModified=last_modified
+    )
+
+    details.catalog_entry = catalog_entry
 
     return details
 

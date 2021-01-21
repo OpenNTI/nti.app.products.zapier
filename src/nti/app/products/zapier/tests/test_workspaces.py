@@ -27,6 +27,8 @@ from nti.app.products.zapier import ZAPIER_PATH
 
 from nti.app.products.zapier.interfaces import IZapierWorkspace
 
+from nti.app.products.zapier.workspaces import COURSES_COLLECTION
+
 from nti.app.testing.application_webtest import ApplicationLayerTest
 
 from nti.app.testing.decorators import WithSharedApplicationMockDS
@@ -81,7 +83,7 @@ class TestWorkspaces(ApplicationLayerTest):
             assert_that(workspace.name, is_(ZAPIER))
 
             # Collections
-            assert_that(workspace.collections, has_length(0))
+            assert_that(workspace.collections, has_length(1))
 
         user_env = self._make_extra_environ(username=username)
         self.testapp.get(ws_traversal_path,
@@ -109,6 +111,15 @@ class TestWorkspaces(ApplicationLayerTest):
                           'GET',
                           '/'.join((ds_path, ZAPIER_PATH, RESOLVE_ME)))
 
+        courses_collection = [collection for collection in ws_ext['Items']
+                              if collection['Title'] == COURSES_COLLECTION]
+        assert_that(courses_collection, has_length(1))
+        courses_collection = courses_collection[0]
+
+        self.require_link(ws_ext,
+                          'course_search',
+                          'GET',
+                          courses_collection['href'])
         if site_auth_path:
             self.require_link(ws_ext,
                               USER_SEARCH,
