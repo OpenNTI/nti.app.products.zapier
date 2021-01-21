@@ -73,6 +73,5 @@ class ZapierCourseCollectionView(CourseCollectionView):
         return result
 
     def _externalize_result(self, result):
-        from IPython.terminal.debugger import set_trace; set_trace()
         return to_external_object(result,
                                   policy_name='zapier')
