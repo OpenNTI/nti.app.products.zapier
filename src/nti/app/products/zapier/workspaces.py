@@ -19,12 +19,15 @@ from zope.container.contained import Contained
 
 from nti.app.authentication.interfaces import ISiteAuthentication
 
+from nti.app.products.courseware.workspaces import CourseCatalogCollection
+
 from nti.app.products.zapier import AUTH_USERS_PATH
 from nti.app.products.zapier import SUBSCRIPTIONS_VIEW
 from nti.app.products.zapier import USER_SEARCH
 from nti.app.products.zapier import ZAPIER
 from nti.app.products.zapier import ZAPIER_PATH
 
+from nti.app.products.zapier.interfaces import IZapierCourseCatalogCollection
 from nti.app.products.zapier.interfaces import IZapierWorkspace
 
 from nti.appserver.workspaces import IWorkspace
@@ -43,6 +46,8 @@ from nti.links.links import Link
 
 from nti.property.property import alias
 
+COURSES_COLLECTION = 'Courses'
+
 logger = __import__('logging').getLogger(__name__)
 
 
@@ -58,7 +63,7 @@ class _ZapierWorkspace(Contained):
 
     @Lazy
     def collections(self):
-        return ()
+        return (ZapierCourseCatalogCollection(self),)
 
     def _ds_folder(self):
         return component.getUtility(IDataserver).dataserver_folder
@@ -71,6 +76,10 @@ class _ZapierWorkspace(Contained):
                           method='GET',
                           elements=(ZAPIER_PATH,
                                     "resolve_me")))
+
+        links.append(Link(self[COURSES_COLLECTION],
+                          rel='course_search',
+                          method='GET'))
 
         site_auth = component.queryUtility(ISiteAuthentication)
         if site_auth is not None:
@@ -134,3 +143,10 @@ def _zapier_workspace_for_user(user, _unused_request):
         return ws
 
 
+@interface.implementer(IZapierCourseCatalogCollection)
+class ZapierCourseCatalogCollection(CourseCatalogCollection):
+    """
+    Provides context for view and available courses for course search
+    """
+    name = COURSES_COLLECTION
+    __name__ = name

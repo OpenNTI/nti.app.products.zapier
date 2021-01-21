@@ -14,20 +14,26 @@ from zope.schema import vocabulary
 
 from zope.traversing.interfaces import IPathAdapter
 
+from nti.app.products.courseware.interfaces import ICoursesCatalogCollection
+
 from nti.appserver.workspaces import IWorkspace
 
 from nti.base.interfaces import ICreated
 from nti.base.interfaces import ICreatedTime
+from nti.base.interfaces import ILastModified
 
 from nti.dataserver.users.interfaces import checkEmailAddress
 from nti.dataserver.users.interfaces import checkRealname
+
+from nti.ntiids.schema import ValidNTIID
 
 from nti.schema.field import DecodingValidTextLine
 from nti.schema.field import HTTPURL
 from nti.schema.field import Object
 from nti.schema.field import ValidChoice
-from nti.schema.field import ValidTextLine
 from nti.schema.field import ValidDatetime
+from nti.schema.field import ValidText
+from nti.schema.field import ValidTextLine
 
 EVENT_USER_CREATED = u"user.created"
 EVENT_USER_ENROLLED = u"user.enrolled"
@@ -65,6 +71,33 @@ class IUserDetails(ICreatedTime):
     LastSeen = ValidDatetime(title=u"Last seen",
                              description=u"The latest record of user activity.",
                              required=False)
+
+
+class ICourseDetails(ILastModified):
+
+    Id = ValidNTIID(title=u"Course catalog entry NTIID")
+
+    ProviderId = ValidTextLine(title=u"The unique id assigned by the provider",
+                               required=True,
+                               max_length=32,
+                               min_length=1)
+
+    StartDate = ValidDatetime(title=u"The date on which the course begins",
+                              description=u"Currently optional; a missing value means the course already started",
+                              required=False)
+
+    EndDate = ValidDatetime(title=u"The date on which the course ends",
+                            description=u"Currently optional; a missing value means the course has no defined end date.",
+                            required=False)
+
+    Title = ValidTextLine(title=u"The human-readable section name of this item",
+                          required=True,
+                          min_length=1,
+                          max_length=140)
+
+    Description = ValidText(title=u"The human-readable description",
+                            default=u'',
+                            required=False)
 
 
 class ISubscriptionRequest(ICreated):
@@ -115,4 +148,10 @@ class IWebhookSubscriber(interface.Interface):
 class IZapierWorkspace(IWorkspace):
     """
     A workspace for Zapier info and links.
+    """
+
+
+class IZapierCourseCatalogCollection(ICoursesCatalogCollection):
+    """
+    Provides context for view and available courses for course search
     """
