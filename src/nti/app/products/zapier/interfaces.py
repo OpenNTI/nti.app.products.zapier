@@ -14,9 +14,9 @@ from zope.schema import vocabulary
 
 from zope.traversing.interfaces import IPathAdapter
 
-from nti.app.products.courseware.interfaces import ICoursesCatalogCollection
-
 from nti.appserver.workspaces import IWorkspace
+
+from nti.appserver.workspaces.interfaces import ICatalogCollection
 
 from nti.base.interfaces import ICreated
 from nti.base.interfaces import ICreatedTime
@@ -151,7 +151,7 @@ class IZapierWorkspace(IWorkspace):
     """
 
 
-class IZapierCourseCatalogCollection(ICoursesCatalogCollection):
+class IZapierCourseCatalogCollection(ICatalogCollection):
     """
     Provides context for view and available courses for course search
     """
