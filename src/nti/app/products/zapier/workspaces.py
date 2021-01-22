@@ -19,7 +19,7 @@ from zope.container.contained import Contained
 
 from nti.app.authentication.interfaces import ISiteAuthentication
 
-from nti.app.products.courseware.workspaces import CourseCatalogCollection
+from nti.app.products.courseware.interfaces import IAvailableCoursesProvider
 
 from nti.app.products.zapier import AUTH_USERS_PATH
 from nti.app.products.zapier import SUBSCRIPTIONS_VIEW
@@ -34,6 +34,8 @@ from nti.appserver.workspaces import IWorkspace
 
 from nti.appserver.workspaces.interfaces import IUserService
 
+from nti.contenttypes.courses.interfaces import ICourseCatalog
+
 from nti.coremetadata.interfaces import IDataserver
 
 from nti.dataserver.authorization import is_admin_or_site_admin
@@ -41,6 +43,8 @@ from nti.dataserver.authorization import is_admin_or_site_admin
 from nti.dataserver.authorization_acl import has_permission
 
 from nti.dataserver import authorization as nauth
+
+from nti.externalization.interfaces import LocatedExternalDict
 
 from nti.links.links import Link
 
@@ -144,9 +148,53 @@ def _zapier_workspace_for_user(user, _unused_request):
 
 
 @interface.implementer(IZapierCourseCatalogCollection)
-class ZapierCourseCatalogCollection(CourseCatalogCollection):
+class ZapierCourseCatalogCollection(Contained):
     """
     Provides context for view and available courses for course search
     """
     name = COURSES_COLLECTION
     __name__ = name
+
+    _workspace = alias('__parent__')
+    accepts = ()
+    links = ()
+
+    def __init__(self, zapier_workspace):
+        self.__parent__ = zapier_workspace
+
+    class _IteratingDict(LocatedExternalDict):
+        # BWC : act like a dict, but iterate like a list
+        _v_container_ext_as_list = True
+
+        def __iter__(self):
+            return iter(self.values())
+
+    def __init__(self, parent):
+        self.__parent__ = parent
+
+    @Lazy
+    def catalog(self):
+        return component.queryUtility(ICourseCatalog)
+
+    @Lazy
+    def available_entries(self):
+        """
+        Return a dict of course catalog entries the user is not enrolled
+        in and that are available to be enrolled in.
+        """
+        course_provider = IAvailableCoursesProvider(self.__parent__.user)
+        result = self._IteratingDict()
+        for entry in course_provider.get_available_entries():
+            result[entry.ntiid] = entry
+        return result
+
+    @Lazy
+    def container(self):
+        container = self.available_entries
+        container.__name__ = self.catalog.__name__
+        container.__parent__ = self.catalog.__parent__
+        container.lastModified = self.catalog.lastModified
+        return container
+
+    def __len__(self):
+        return len(self.container)

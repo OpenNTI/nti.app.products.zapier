@@ -135,15 +135,11 @@ class TestSearchCourses(ApplicationLayerTest, ZapierTestMixin):
 
     default_origin = 'http://platform.ou.edu'
 
-    def _call_FUT(self, filter, params=None, expected_length=None, **kwargs):
+    def _call_FUT(self, params=None, expected_length=None, **kwargs):
         workspace_kwargs = {key: value for key, value in kwargs.items()
                             if key == 'extra_environ'}
-        base_search_path = self.get_workspace_link('course_search',
-                                                   **workspace_kwargs)
-        from six.moves import urllib_parse
-        quoted_filter = urllib_parse.quote_plus(filter)
-        path = b'%s?filter=%s' % (base_search_path,
-                                  quoted_filter)
+        path = self.get_workspace_link('course_search',
+                                       **workspace_kwargs)
 
         res = self.testapp.get(path, params, **kwargs)
 
@@ -154,7 +150,7 @@ class TestSearchCourses(ApplicationLayerTest, ZapierTestMixin):
 
     @WithSharedApplicationMockDS(users=True, testapp=True)
     def test_externalization(self):
-        res = self._call_FUT('CS 1323-995', status=200)
+        res = self._call_FUT(params={"filter": 'CS 1323-995'}, status=200)
         json_body = res.json_body
 
         assert_that(json_body['Items'], has_length(1))
@@ -175,3 +171,25 @@ class TestSearchCourses(ApplicationLayerTest, ZapierTestMixin):
                             "CreatedTime": timestamp_to_string(course.createdTime),
                             "Last Modified": timestamp_to_string(course.lastModified),
                         }))
+
+            links = json_body.get("Links") or ()
+            assert_that(links, has_length(1))
+
+    @WithSharedApplicationMockDS(users=True, testapp=True)
+    def test_links(self):
+        res = self._call_FUT(params={"filter": 'CS 1323',
+                                     "batchStart": 1,
+                                     "batchSize": 1
+                                     },
+                             status=200)
+        json_body = res.json_body
+
+        assert_that(json_body['Items'], has_length(1))
+
+        # Ensure we get our paging links, but not others that would
+        # have been decorated for similar course collections used by this
+        # view (e.g. "ByTag")
+        links = json_body.get("Links") or ()
+        assert_that(links, has_length(2))
+        self.require_link_href_with_rel(json_body, "batch-next")
+        self.require_link_href_with_rel(json_body, "batch-prev")
