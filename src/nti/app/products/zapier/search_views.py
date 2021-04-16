@@ -29,14 +29,6 @@ from nti.externalization import to_external_object
 logger = __import__('logging').getLogger(__name__)
 
 
-def _user_externalizer():
-    def _externalize_user(user):
-        return to_external_object(IUserDetails(user),
-                                  policy_name='zapier')
-
-    return _externalize_user
-
-
 @view_config(route_name='objects.generic.traversal',
              request_method='GET',
              renderer='rest',
