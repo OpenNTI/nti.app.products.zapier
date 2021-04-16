@@ -34,7 +34,7 @@ Add Subscription
 | POST ``/dataserver2/zapier/subscriptions/user/created``
 | POST ``/dataserver2/zapier/subscriptions/user/enrolled``
 | POST ``/dataserver2/zapier/subscriptions/course/created``
-| POST ``/dataserver2/zapier/subscriptions/course/completed``
+| POST ``/dataserver2/zapier/subscriptions/course/progress_updated``
 
 Creates a subscription for the object and event type provided in the url.
 
@@ -151,28 +151,32 @@ Sends an ``IUserEnrolledEvent`` containing the enrollment information.
     :scope: Name of the enrollment scope.
 
 
-Course Completed
-----------------
-Worth noting here that the course is the object of the event, so any attempt
-to get the user will need to extract it from the event.
+Course Progress Updated
+-----------------------
+Fired when a user successfully completes a required item for a course, such as
+an assignment.
 
 When: ``ICourseInstance``, ``IUserProgressUpdatedEvent``
-or ``ICourseInstance``, ``ICourseCompletedEvent``
+
 Method: POST
 
 Request
 ~~~~~~~
-Sends an ``ICourseCompletedEvent`` containing the completion info:
+Sends an ``UserProgressUpdatedEvent`` containing the completion info:
 
-``ICourseCompletedEvent``
-    :eventType: ``course.complete``
-    :data: Contains an ``object`` attribute with the ``ICourseCompletionDetails``
-        with user and course info.
+``UserProgressUpdatedEvent``
+    :EventType: ``course.progress_updated``
+    :Data: Contains the ``ProgressSummary`` with user and course info.
 
-``ICourseCompletionDetails``
-    :user: The ``IUserDetails`` for the enrolled user.
-    :course: The ``ICourseDetails`` for the associated course.
+``ProgressSummary``
+    :User: The ``IUserDetails`` for the enrolled user.
+    :Course: The ``ICourseDetails`` for the associated course.
+    :Progess: The ``ProgressDetails`` for the associated course.
 
+``ProgressDetails``
+    :AbsoluteProgress: Number of items completed in the course.
+    :MaxPossibleProgress: Total completable items in the course.
+    :PercentageProgress: Percentage of items completed for the course.
 
 Actions
 =======

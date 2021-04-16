@@ -9,6 +9,8 @@ from zope import interface
 
 from zope.interface import Attribute
 
+from zope.interface.interfaces import IObjectEvent
+
 from zope.schema import TextLine
 from zope.schema import vocabulary
 
@@ -22,12 +24,19 @@ from nti.base.interfaces import ICreated
 from nti.base.interfaces import ICreatedTime
 from nti.base.interfaces import ILastModified
 
+from nti.base.schema import Number
+
 from nti.dataserver.users.interfaces import checkEmailAddress
 from nti.dataserver.users.interfaces import checkRealname
+
+from nti.contenttypes.completion.interfaces import IProgress
+
+from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
 
 from nti.ntiids.schema import ValidNTIID
 
 from nti.schema.field import DecodingValidTextLine
+from nti.schema.field import Float
 from nti.schema.field import HTTPURL
 from nti.schema.field import Object
 from nti.schema.field import ValidChoice
@@ -38,12 +47,12 @@ from nti.schema.field import ValidTextLine
 EVENT_USER_CREATED = u"user.created"
 EVENT_USER_ENROLLED = u"user.enrolled"
 EVENT_COURSE_CREATED = u"course.created"
-EVENT_COURSE_COMPLETED = u"course.completed"
+EVENT_PROGESS_UPDATED = u"course.progress_updated"
 
 EVENTS = (EVENT_USER_CREATED,
           EVENT_USER_ENROLLED,
           EVENT_COURSE_CREATED,
-          EVENT_COURSE_COMPLETED)
+          EVENT_PROGESS_UPDATED)
 
 EVENT_VOCABULARY = vocabulary.SimpleVocabulary(
     [vocabulary.SimpleTerm(_x) for _x in EVENTS]
@@ -155,3 +164,80 @@ class IZapierCourseCatalogCollection(ICatalogCollection):
     """
     Provides context for view and available courses for course search
     """
+
+
+class IProgressDetails(interface.Interface):
+    """
+    Indicates the progress made for a particular user and course
+    """
+
+    AbsoluteProgress = Number(title=u"A number indicating the absolute progress made on an item.",
+                              default=None,
+                              required=False)
+
+    MaxPossibleProgress = Number(title=u"A number indicating the max possible progress that could be made on an item. May be null.",
+                                 default=None,
+                                 required=False)
+
+    PercentageProgress = Float(title=u"A percentage measure of how much progress exists",
+                               required=True,
+                               readonly=True,
+                               min=0.0,
+                               max=1.0)
+
+
+class IProgressSummary(interface.Interface):
+    """
+    Provides context information for user progress in a course when it is
+    updated
+    """
+
+    User = Object(IUserDetails,
+                  title=u"User",
+                  description=u"The user whose progress was updated.",
+                  required=True)
+
+    Course = Object(ICourseDetails,
+                  title=u"Course",
+                  description=u"The course for which progress was updated.",
+                  required=True)
+
+    Progress = Object(IProgressDetails,
+                  title=u"User Progress",
+                  description=u"The current progress information for the "
+                              u"related course and user.",
+                  required=True)
+
+
+class IExternalUserProgressUpdatedEvent(IExternalEvent):
+    """
+    Sent to any applicable external subscriptions when a user's progress
+    for a course has been updated.
+    """
+
+    Data = Object(IProgressSummary,
+                  title=u"Information for the newly created user.",
+                  required=True)
+
+
+class IZapierUserProgressUpdatedEvent(IObjectEvent):
+    """
+    Zapier-specific user progress updated event, triggered by the
+    platform's IUserProgressUpdatedEvent, but with altered data that works
+    better with nti.webhooks.
+    """
+
+    EnrollmentRecord = Object(ICourseInstanceEnrollmentRecord,
+                              title=u"Course for which the progress is being updated.",
+                              required=True)
+
+    User = Object(IUserDetails,
+                  title=u"User",
+                  description=u"The user whose progress was updated.",
+                  required=True)
+
+    Progress = Object(IProgress,
+                      title=u"Progress",
+                      description=u"The current progress information for the "
+                                  u"related course and user.",
+                      required=True)

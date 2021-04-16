@@ -172,9 +172,6 @@ class TestSearchCourses(ApplicationLayerTest, ZapierTestMixin):
                             "Last Modified": timestamp_to_string(course.lastModified),
                         }))
 
-            links = json_body.get("Links") or ()
-            assert_that(links, has_length(1))
-
     @WithSharedApplicationMockDS(users=True, testapp=True)
     def test_links(self):
         res = self._call_FUT(params={"filter": 'CS 1323',
