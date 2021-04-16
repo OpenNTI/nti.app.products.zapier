@@ -60,18 +60,14 @@ from nti.webhooks.api import subscribe_to_resource
 from nti.webhooks.interfaces import IWebhookPayload
 
 
-def _user_progress(user, course):
-    return component.queryMultiAdapter((user, course),
-                                       IProgress)
-
-
 @interface.implementer(IZapierUserProgressUpdatedEvent)
 @component.adapter(IUserProgressUpdatedEvent)
 def _zapier_user_progress(event):
     course = event.context
     user = event.user
     enrollment = get_enrollment_record(course, user)
-    progress = _user_progress(user, course)
+    progress = component.queryMultiAdapter((user, course),
+                                           IProgress)
 
     return ZapierUserProgressUpdatedEvent(
         enrollment,

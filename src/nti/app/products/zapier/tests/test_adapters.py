@@ -5,6 +5,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import contextlib
 import time
 from datetime import timedelta
 
@@ -12,6 +13,7 @@ import fudge
 
 from hamcrest import assert_that
 from hamcrest import has_properties
+from hamcrest import is_
 from hamcrest import not_none
 from hamcrest import same_instance
 
@@ -27,6 +29,7 @@ from nti.app.products.zapier.model import ZapierUserProgressUpdatedEvent
 from nti.app.products.zapier.tests import ZapierTestCase
 
 from nti.contenttypes.completion.interfaces import UserProgressUpdatedEvent
+from nti.contenttypes.completion.interfaces import IProgress
 
 from nti.contenttypes.completion.progress import Progress
 
@@ -36,6 +39,9 @@ from nti.contenttypes.courses.catalog import CourseCatalogEntry
 
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
+from nti.contenttypes.courses.interfaces import ICourseInstance
+
+from nti.coremetadata.interfaces import IUser
 
 from nti.dataserver.tests import mock_dataserver as mock_ds
 
@@ -128,16 +134,10 @@ class TestAdapters(ZapierTestCase):
             ))
 
     @WithMockDS
-    @fudge.patch('nti.app.products.zapier.adapters.get_enrollment_record',
-                 'nti.app.products.zapier.adapters._user_progress')
-    def test_user_progress_conversion(self,
-                                      get_enrollment_record,
-                                      get_user_progress):
+    @fudge.patch('nti.app.products.zapier.adapters.get_enrollment_record')
+    def test_user_progress_conversion(self, get_enrollment_record):
         enrollment_record = fudge.Fake('EnrollmentRecord')
         get_enrollment_record.is_callable().returns(enrollment_record)
-        progress = fudge.Fake('Progress').has_attr(AbsoluteProgress=1,
-                                                   MaxPossibleProgress=2)
-        get_user_progress.is_callable().returns(progress)
 
         with mock_ds.mock_db_trans():
             user = User.create_user(username=u"jbender",
@@ -150,7 +150,29 @@ class TestAdapters(ZapierTestCase):
             event = UserProgressUpdatedEvent(obj=course,
                                              user=user,
                                              context=course)
-            zapier_event = IZapierUserProgressUpdatedEvent(event)
+
+            progress = fudge.Fake('Progress').has_attr(AbsoluteProgress=1,
+                                                       MaxPossibleProgress=2,
+                                                       PercentageProgress=0.5)
+            adapter = fudge.Fake('ProgressAdapter').is_callable().returns(progress)
+            with _provide_adapter(adapter, required=(IUser, ICourseInstance), provided=IProgress):
+                zapier_event = IZapierUserProgressUpdatedEvent(event)
+
             assert_that(zapier_event.EnrollmentRecord, same_instance(enrollment_record))
-            assert_that(zapier_event.User, same_instance(user))
-            assert_that(zapier_event.Progress, same_instance(progress))
+            assert_that(zapier_event.User.username, is_(user.username))
+
+            assert_that(zapier_event.Progress, has_properties(
+                AbsoluteProgress=1,
+                MaxPossibleProgress=2,
+                PercentageProgress=0.5,
+            ))
+
+
+@contextlib.contextmanager
+def _provide_adapter(adapter, **kwargs):
+    gsm = component.getGlobalSiteManager()
+    gsm.registerAdapter(adapter, **kwargs)
+    try:
+        yield
+    finally:
+        gsm.unregisterAdapter(adapter, **kwargs)
