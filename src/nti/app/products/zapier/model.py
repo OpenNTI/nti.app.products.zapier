@@ -26,9 +26,11 @@ from nti.schema.fieldproperty import createDirectFieldProperties
 
 from nti.schema.schema import SchemaConfigured
 
+from nti.webhooks.interfaces import IWebhookPayload
+
 
 @WithRepr
-@interface.implementer(IUserCreatedEvent)
+@interface.implementer(IUserCreatedEvent, IWebhookPayload)
 class UserCreatedEvent(SchemaConfigured):
     createDirectFieldProperties(IUserCreatedEvent)
 
@@ -70,7 +72,7 @@ class ProgressSummary(SchemaConfigured):
 
 
 @WithRepr
-@interface.implementer(IExternalUserProgressUpdatedEvent)
+@interface.implementer(IExternalUserProgressUpdatedEvent, IWebhookPayload)
 class ExternalUserProgressUpdatedEvent(SchemaConfigured):
     createDirectFieldProperties(IExternalUserProgressUpdatedEvent)
 

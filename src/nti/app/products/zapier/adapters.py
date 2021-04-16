@@ -102,7 +102,6 @@ def _user_payload(user):
 
     payload = UserCreatedEvent(EventType=EVENT_USER_CREATED,
                                Data=details)
-    interface.alsoProvides(payload, IWebhookPayload)
     return payload
 
 
@@ -119,7 +118,6 @@ def _course_progress_updated_payload(record, event):
 
     payload = ExternalUserProgressUpdatedEvent(EventType=EVENT_PROGESS_UPDATED,
                                                Data=data)
-    interface.alsoProvides(payload, IWebhookPayload)
     return payload
 
 
