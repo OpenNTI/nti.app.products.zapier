@@ -117,7 +117,7 @@ class ProgressDetails(object):
             result = None
         return result
 
-    def __str__(self, *unused_args, **unused_kwargs):
+    def __str__(self):
         clazz = self.__class__.__name__
         result = "%s(AbsoluteProgress=%s) (MaxPossibleProgress=%s)" \
                  % (clazz, self.AbsoluteProgress, self.MaxPossibleProgress)
