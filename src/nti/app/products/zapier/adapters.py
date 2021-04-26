@@ -5,6 +5,9 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+from abc import ABCMeta
+from abc import abstractmethod
+
 from zope import component
 from zope import interface
 
@@ -169,13 +172,30 @@ def details_from_course(course):
     return ICourseDetails(catalog_entry)
 
 
-@interface.implementer(IWebhookSubscriber)
 class AbstractWebhookSubscriber(object):
+
+    __metaclass__ = ABCMeta
 
     permission_id = ACT_VIEW_EVENTS.id
 
     def __init__(self, request):
         self.request = request
+
+    @property
+    @abstractmethod
+    def for_(self):
+        """
+        Subclasses must implement this to define the object of the subscription.
+        """
+        raise NotImplementedError()
+
+    @property
+    @abstractmethod
+    def when(self):
+        """
+        Subclasses must implement this to define the event of the subscription.
+        """
+        raise NotImplementedError()
 
     @Lazy
     def owner_id(self):
@@ -197,11 +217,13 @@ class AbstractWebhookSubscriber(object):
         return webhook_subscription
 
 
+@interface.implementer(IWebhookSubscriber)
 class UserCreatedWebhookSubscriber(AbstractWebhookSubscriber):
     for_ = IUser
     when = IObjectAddedEvent
 
 
+@interface.implementer(IWebhookSubscriber)
 class CourseProgressUpdatedWebhookSubscriber(AbstractWebhookSubscriber):
     for_ = ICourseInstanceEnrollmentRecord
     when = IZapierUserProgressUpdatedEvent
