@@ -24,11 +24,11 @@
         handler="nti.webhooks.subscribers.dispatch_webhook_event" />
 
     <!-- Adapters -->
-    <adapter factory=".adapters._user_payload"
+    <adapter factory=".adapters.user_payload"
              for="nti.coremetadata.interfaces.IUser"
              provides="nti.webhooks.interfaces.IWebhookPayload"
              name="zapier-webhook-delivery"/>
-    <adapter factory=".adapters._course_progress_updated_payload"
+    <adapter factory=".adapters.course_progress_updated_payload"
              for="nti.contenttypes.courses.interfaces.ICourseInstanceEnrollmentRecord
                   nti.app.products.zapier.interfaces.IZapierUserProgressUpdatedEvent"
              provides="nti.webhooks.interfaces.IWebhookPayload"
@@ -41,19 +41,19 @@
              for="pyramid.interfaces.IRequest"
              provides=".interfaces.IWebhookSubscriber"
              name="course.progress_updated"/>
-    <adapter factory=".adapters._details_from_user"
+    <adapter factory=".adapters.details_from_user"
              for="nti.coremetadata.interfaces.IUser"
              provides=".interfaces.IUserDetails"/>
-    <adapter factory=".adapters._details_from_catalog_entry"
+    <adapter factory=".adapters.details_from_catalog_entry"
              for="nti.contenttypes.courses.interfaces.ICourseCatalogEntry"
              provides=".interfaces.ICourseDetails"/>
-    <adapter factory=".adapters._details_from_course"
+    <adapter factory=".adapters.details_from_course"
              for="nti.contenttypes.courses.interfaces.ICourseInstance"
              provides=".interfaces.ICourseDetails"/>
-    <adapter factory=".adapters._zapier_user_progress"
+    <adapter factory=".adapters.zapier_user_progress"
              for="nti.contenttypes.completion.interfaces.IUserProgressUpdatedEvent"
              provides=".interfaces.IZapierUserProgressUpdatedEvent"/>
-    <adapter factory=".adapters._progress_details"
+    <adapter factory=".adapters.progress_details"
              for="nti.contenttypes.completion.interfaces.IProgress"
              provides=".interfaces.IProgressDetails"/>
 

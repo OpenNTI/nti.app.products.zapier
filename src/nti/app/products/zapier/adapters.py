@@ -62,7 +62,7 @@ from nti.webhooks.interfaces import IWebhookPayload
 
 @interface.implementer(IZapierUserProgressUpdatedEvent)
 @component.adapter(IUserProgressUpdatedEvent)
-def _zapier_user_progress(event):
+def zapier_user_progress(event):
     course = event.context
     user = event.user
     enrollment = get_enrollment_record(course, user)
@@ -78,7 +78,7 @@ def _zapier_user_progress(event):
 
 @interface.implementer(IProgressDetails)
 @component.adapter(IProgress)
-def _progress_details(progress):
+def progress_details(progress):
     return ProgressDetails(
         AbsoluteProgress=progress.AbsoluteProgress,
         MaxPossibleProgress=progress.MaxPossibleProgress
@@ -97,7 +97,7 @@ def _realname_for_user(user):
 
 @component.adapter(IUser)
 @interface.implementer(IWebhookPayload)
-def _user_payload(user):
+def user_payload(user):
     details = IUserDetails(user)
 
     payload = UserCreatedEvent(EventType=EVENT_USER_CREATED,
@@ -107,7 +107,7 @@ def _user_payload(user):
 
 @component.adapter(ICourseInstanceEnrollmentRecord, IZapierUserProgressUpdatedEvent)
 @interface.implementer(IWebhookPayload)
-def _course_progress_updated_payload(record, event):
+def course_progress_updated_payload(record, event):
     user_details = IUserDetails(event.User)
     course_details = ICourseDetails(record.CourseInstance)
     progress_details = IProgressDetails(event.Progress)
@@ -129,7 +129,7 @@ def _ts_to_datetime(timestamp):
 
 @component.adapter(IUser)
 @interface.implementer(IUserDetails)
-def _details_from_user(user):
+def details_from_user(user):
     last_login = _ts_to_datetime(getattr(user, 'lastLoginTime', None))
     last_seen = _ts_to_datetime(getattr(user, 'lastSeenTime', None))
     created_time = getattr(user, 'createdTime', None)
@@ -148,7 +148,7 @@ def _details_from_user(user):
 
 @component.adapter(ICourseCatalogEntry)
 @interface.implementer(ICourseDetails)
-def _details_from_catalog_entry(catalog_entry):
+def details_from_catalog_entry(catalog_entry):
     created_time = getattr(catalog_entry, 'createdTime', None)
     last_modified = getattr(catalog_entry, 'lastModified', None)
 
@@ -170,7 +170,7 @@ def _details_from_catalog_entry(catalog_entry):
 
 @component.adapter(ICourseInstance)
 @interface.implementer(ICourseDetails)
-def _details_from_course(course):
+def details_from_course(course):
     catalog_entry = ICourseCatalogEntry(course, None)
     return ICourseDetails(catalog_entry, None)
 
