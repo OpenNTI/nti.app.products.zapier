@@ -84,17 +84,6 @@ class TestSubscriptions(ApplicationLayerTest, ZapierTestMixin):
 
     default_origin = 'http://janux.ou.edu'
 
-    @WithSharedApplicationMockDS(testapp=True, users=True)
-    def tearDown(self):
-        """
-        Our janux.ou.edu site should have no courses in it.
-        """
-        with mock_dataserver.mock_db_trans(site_name='janux.ou.edu'):
-            library = component.getUtility(IContentPackageLibrary)
-            enumeration = IDelimitedHierarchyContentPackageEnumeration(library)
-            # pylint: disable=no-member
-            shutil.rmtree(enumeration.root.absolute_path, True)
-
     def _create_subscription(self, obj_type, event_type, target_url, **kwargs):
         workspace_kwargs = dict()
         if 'extra_environ' in kwargs:
@@ -193,15 +182,16 @@ class TestSubscriptions(ApplicationLayerTest, ZapierTestMixin):
         publish_url = self.require_link_href_with_rel(ext_obj, 'publish')
         return self.testapp.post_json(publish_url).json_body
 
-    def _create_course(self):
+    def _create_admin_level(self, key):
+        admin_href = self._get_admin_href()
+        admin_res = self.testapp.post_json(admin_href, {'key': key}).json_body
+        return admin_res
+
+    def _create_course(self, admin_href):
         """
         Create course and return ext
         """
-        admin_href = self._get_admin_href()
-        test_admin_key = 'ZapierTestKey'
-        admin_res = self.testapp.post_json(admin_href, {'key': test_admin_key}).json_body
-        new_admin_href = admin_res['href']
-        new_course = self.testapp.post_json(new_admin_href,
+        new_course = self.testapp.post_json(admin_href,
                                             {'ProviderUniqueID': 'ZapierTestCourse',
                                              'title': 'ZapierTestCourse',
                                              'RichDescription': 'ZapierTestCourse',
@@ -317,11 +307,22 @@ class TestSubscriptions(ApplicationLayerTest, ZapierTestMixin):
             username = user.username
 
         # Submit a successful assignment
-        course = self._create_course()
-        assignment = self._create_assignment(course)
-        self._enroll(username, course)
-        user_env = self._make_extra_environ(username)
-        self._submit(assignment, extra_environ=user_env)
+        admin_res = self._create_admin_level('ZapierTestKey')
+        new_admin_href = admin_res['href']
+        try:
+            course = self._create_course(new_admin_href)
+            assignment = self._create_assignment(course)
+            self._enroll(username, course)
+            user_env = self._make_extra_environ(username)
+            self._submit(assignment, extra_environ=user_env)
+        finally:
+            # Remove the admin level to avoid issues with rerunning test
+            with mock_dataserver.mock_db_trans(site_name='janux.ou.edu'):
+                library = component.getUtility(IContentPackageLibrary)
+                enumeration = IDelimitedHierarchyContentPackageEnumeration(library)
+                # pylint: disable=no-member
+                path = enumeration.root.absolute_path + "/Courses/ZapierTestKey"
+                shutil.rmtree(path, True)
 
         with mock_ds.mock_db_trans(site_name="janux.ou.edu"):
             subscription = find_object_with_ntiid(subscription_ntiid)

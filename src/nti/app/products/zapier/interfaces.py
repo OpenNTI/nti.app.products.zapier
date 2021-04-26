@@ -55,7 +55,7 @@ EVENTS = (EVENT_USER_CREATED,
           EVENT_PROGESS_UPDATED)
 
 EVENT_VOCABULARY = vocabulary.SimpleVocabulary(
-    [vocabulary.SimpleTerm(_x) for _x in EVENTS]
+    tuple(vocabulary.SimpleTerm(x) for x in EVENTS)
 )
 
 
@@ -180,7 +180,6 @@ class IProgressDetails(interface.Interface):
                                  required=False)
 
     PercentageProgress = Float(title=u"A percentage measure of how much progress exists",
-                               required=True,
                                readonly=True,
                                min=0.0,
                                max=1.0)

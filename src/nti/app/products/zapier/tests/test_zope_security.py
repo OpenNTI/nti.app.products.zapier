@@ -196,3 +196,12 @@ class TestEnrollmentRecordPermissions(ApplicationLayerTest):
             roles = ppm.getRolesForPermission(ACT_READ.id)
             assert_that(roles, has_length(1))
             assert_that(roles, contains((ROLE_ADMIN.id, Allow)))
+
+            # If the record has no Principal, possible given the interface
+            # specifies Principal as optional
+            record = DefaultCourseInstanceEnrollmentRecord()
+
+            ppm = IPrincipalPermissionManager(record)
+            principals = ppm.getPrincipalsForPermission(ACT_READ.id)
+            assert_that(principals, has_length(0))
+

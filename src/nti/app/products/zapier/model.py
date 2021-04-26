@@ -92,7 +92,6 @@ class ZapierUserProgressUpdatedEvent(ObjectEvent):
         self.Progress = progress
 
 
-@WithRepr
 @interface.implementer(IProgressDetails)
 class ProgressDetails(object):
     # Taking a cue from the implementation of
@@ -102,6 +101,7 @@ class ProgressDetails(object):
     # for setting our defaults and any validation. Since these are only built
     # internally, we at least have control over our fate.
 
+    __slots__ = ('AbsoluteProgress', 'MaxPossibleProgress')
     __external_can_create__ = False
 
     __external_class_name__ = "ProgressDetails"
@@ -119,8 +119,8 @@ class ProgressDetails(object):
             result = None
         return result
 
-    def __str__(self):
+    def __repr__(self):
         clazz = self.__class__.__name__
-        result = "%s(AbsoluteProgress=%s) (MaxPossibleProgress=%s)" \
+        result = "%s(AbsoluteProgress=%r, MaxPossibleProgress=%r)" \
                  % (clazz, self.AbsoluteProgress, self.MaxPossibleProgress)
         return result

@@ -12,6 +12,8 @@ import fudge
 
 from hamcrest import assert_that
 from hamcrest import has_entries
+from hamcrest import has_properties
+from hamcrest import none
 from hamcrest import not_none
 from nti.externalization.externalization.standard_fields import datetime_to_string
 from nti.externalization.externalization.standard_fields import timestamp_to_string
@@ -122,3 +124,16 @@ class TestModel(ZapierTestCase):
             "MaxPossibleProgress": 2,
             "PercentageProgress": 0.5,
         }))
+
+    def test_progress_details_repr(self):
+        details = ProgressDetails(1, 2)
+        details = eval(repr(details))
+        assert_that(details, has_properties(
+            AbsoluteProgress=1,
+            MaxPossibleProgress=2,
+            PercentageProgress=0.5,
+        ))
+
+    def test_progress_details_default_percentage(self):
+        details = ProgressDetails()
+        assert_that(details.PercentageProgress, none())

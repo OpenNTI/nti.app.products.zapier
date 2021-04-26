@@ -98,14 +98,15 @@ class EnrollmentRecordPrincipalPermissionManager(AnnotationPrincipalPermissionMa
         self.initialize()
 
     @Lazy
-    def _principal_id(self):
-        principal = getattr(self._context, 'Principal', None)
+    def __principal_id(self):
+        principal = self._context.Principal
         return getattr(principal, 'id', None)
 
     def initialize(self):
         # Initialize with perms for the enrollment record owner
-        for permission in (nauth.ACT_READ,):
-            self.grantPermissionToPrincipal(permission.id, self._principal_id)
+        if self.__principal_id:
+            for permission in (nauth.ACT_READ,):
+                self.grantPermissionToPrincipal(permission.id, self.__principal_id)
 
 
 @component.adapter(ICourseInstanceEnrollmentRecord)
