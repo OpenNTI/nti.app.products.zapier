@@ -102,7 +102,7 @@ class TestSubscriptions(ApplicationLayerTest, ZapierTestMixin):
         base_create_path = self.get_workspace_link('create_subscription',
                                                    **workspace_kwargs)
 
-        path = b'%s/%s/%s' % (base_create_path, obj_type, event_type)
+        path = b'/'.join(filter(None, (base_create_path, obj_type, event_type)))
         res = self.testapp.post_json(path,
                                      {
                                          "target": target_url
@@ -130,7 +130,7 @@ class TestSubscriptions(ApplicationLayerTest, ZapierTestMixin):
     @WithSharedApplicationMockDS(users=True,
                                  testapp=True,
                                  default_authenticate=True)
-    def test_create_invalid(self):
+    def test_create_invalid_combo(self):
         target_url = "https://localhost/handle_new_user"
         res = self._create_subscription("user",
                                         "invalid_event_type",
@@ -139,6 +139,20 @@ class TestSubscriptions(ApplicationLayerTest, ZapierTestMixin):
 
         assert_that(res.json_body, has_entries({
             "message": "Unsupported object and event type combination",
+        }))
+
+    @WithSharedApplicationMockDS(users=True,
+                                 testapp=True,
+                                 default_authenticate=True)
+    def test_create_missing_object_or_event_type(self):
+        target_url = "https://localhost/handle_new_user"
+        res = self._create_subscription("user",
+                                        None,
+                                        target_url,
+                                        status=422)
+
+        assert_that(res.json_body, has_entries({
+            "message": "Must specify a object type and event in url.",
         }))
 
     @WithSharedApplicationMockDS(users=True,
