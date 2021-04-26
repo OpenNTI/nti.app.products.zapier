@@ -121,17 +121,11 @@ def course_progress_updated_payload(record, event):
     return payload
 
 
-def _ts_to_datetime(timestamp):
-    if timestamp is None:
-        return None
-    return datetime_from_timestamp(timestamp)
-
-
 @component.adapter(IUser)
 @interface.implementer(IUserDetails)
 def details_from_user(user):
-    last_login = _ts_to_datetime(getattr(user, 'lastLoginTime', None))
-    last_seen = _ts_to_datetime(getattr(user, 'lastSeenTime', None))
+    last_login = datetime_from_timestamp(getattr(user, 'lastLoginTime', None))
+    last_seen = datetime_from_timestamp(getattr(user, 'lastSeenTime', None))
     created_time = getattr(user, 'createdTime', None)
 
     details = UserDetails(Username=user.username,
@@ -171,8 +165,8 @@ def details_from_catalog_entry(catalog_entry):
 @component.adapter(ICourseInstance)
 @interface.implementer(ICourseDetails)
 def details_from_course(course):
-    catalog_entry = ICourseCatalogEntry(course, None)
-    return ICourseDetails(catalog_entry, None)
+    catalog_entry = ICourseCatalogEntry(course)
+    return ICourseDetails(catalog_entry)
 
 
 @interface.implementer(IWebhookSubscriber)
