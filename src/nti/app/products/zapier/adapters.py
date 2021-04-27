@@ -5,8 +5,13 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from abc import ABCMeta
-from abc import abstractmethod
+try:
+    from abc import ABC
+except ImportError: # Python 2
+    from abc import ABCMeta
+    ABC = ABCMeta('ABC', (object,), {'__slots__': ()})
+
+from abc import abstractproperty
 
 from zope import component
 from zope import interface
@@ -172,25 +177,21 @@ def details_from_course(course):
     return ICourseDetails(catalog_entry)
 
 
-class AbstractWebhookSubscriber(object):
-
-    __metaclass__ = ABCMeta
+class AbstractWebhookSubscriber(ABC):
 
     permission_id = ACT_VIEW_EVENTS.id
 
     def __init__(self, request):
         self.request = request
 
-    @property
-    @abstractmethod
+    @abstractproperty
     def for_(self):
         """
         Subclasses must implement this to define the object of the subscription.
         """
         raise NotImplementedError()
 
-    @property
-    @abstractmethod
+    @abstractproperty
     def when(self):
         """
         Subclasses must implement this to define the event of the subscription.
