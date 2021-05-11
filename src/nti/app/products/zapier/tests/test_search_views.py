@@ -9,6 +9,7 @@ import uuid
 
 from hamcrest import assert_that
 from hamcrest import has_entries
+from hamcrest import has_key
 from hamcrest import has_length
 from hamcrest import none
 from hamcrest import not_
@@ -58,7 +59,7 @@ class TestSearchUsers(ApplicationLayerTest, ZapierTestMixin):
 
         res = self.testapp.get(path, params, **kwargs)
 
-        if expected_length:
+        if expected_length is not None:
             assert_that(res.json_body['Items'], has_length(expected_length))
 
         return res
@@ -68,7 +69,7 @@ class TestSearchUsers(ApplicationLayerTest, ZapierTestMixin):
         with mock_ds.mock_db_trans():
             username = u"testuser-%s" % (uuid.uuid4(),)
             email = u'%s@nextthought.com' % (username,)
-            realname = u"%s Test" % (username,)
+            realname = u"%s Test" % (username.title(),)
             self._create_user(username,
                               external_value=dict(
                                   email=email,
@@ -84,7 +85,26 @@ class TestSearchUsers(ApplicationLayerTest, ZapierTestMixin):
                         "MimeType": UserDetails.mime_type,
                         "Username": username,
                         "Realname": realname,
+                        "NonI18NFirstName": username.title(),
+                        "NonI18NLastName": "Test",
                     }))
+
+        with mock_ds.mock_db_trans():
+            username = u"testuser-%s" % (uuid.uuid4(),)
+            self._create_user(username)
+
+        res = self._call_FUT(username, status=200)
+
+        json_body = res.json_body
+        assert_that(json_body['Items'], has_length(1))
+        first_user = json_body['Items'][0]
+        assert_that(first_user,
+                    has_entries({
+                        "MimeType": UserDetails.mime_type,
+                        "Username": username,
+                    }))
+        assert_that(first_user, not_(has_key("NonI18NFirstName")))
+        assert_that(first_user, not_(has_key("NonI18NLastName")))
 
     @WithSharedApplicationMockDS(users=('user2',),
                                  testapp=True,
@@ -143,7 +163,7 @@ class TestSearchCourses(ApplicationLayerTest, ZapierTestMixin):
 
         res = self.testapp.get(path, params, **kwargs)
 
-        if expected_length:
+        if expected_length is not None:
             assert_that(res.json_body['Items'], has_length(expected_length))
 
         return res
@@ -172,16 +192,14 @@ class TestSearchCourses(ApplicationLayerTest, ZapierTestMixin):
                             "Last Modified": timestamp_to_string(course.lastModified),
                         }))
 
-            links = json_body.get("Links") or ()
-            assert_that(links, has_length(1))
-
     @WithSharedApplicationMockDS(users=True, testapp=True)
     def test_links(self):
         res = self._call_FUT(params={"filter": 'CS 1323',
                                      "batchStart": 1,
                                      "batchSize": 1
                                      },
-                             status=200)
+                             status=200,
+                             expected_length=1)
         json_body = res.json_body
 
         assert_that(json_body['Items'], has_length(1))
