@@ -1,0 +1,61 @@
+<!-- -*- mode: nxml -*- -->
+<configure	xmlns="http://namespaces.zope.org/zope"
+            xmlns:ext="http://nextthought.com/ntp/ext">
+
+    <include package="zope.component" file="meta.zcml" />
+    <include package="zope.component" />
+
+    <subscriber
+        for="nti.contenttypes.courses.interfaces.ICourseInstanceEnrollmentRecord
+             .interfaces.IZapierUserProgressUpdatedEvent"
+        handler="nti.webhooks.subscribers.dispatch_webhook_event" />
+
+    <!-- Adapters -->
+    <adapter factory=".adapters.course_progress_updated_payload"
+             for="nti.contenttypes.courses.interfaces.ICourseInstanceEnrollmentRecord
+                  .interfaces.IZapierUserProgressUpdatedEvent"
+             provides="nti.webhooks.interfaces.IWebhookPayload"
+             name="zapier-webhook-delivery"/>
+    <adapter factory=".adapters.CourseProgressUpdatedWebhookSubscriber"
+             for="pyramid.interfaces.IRequest"
+             provides="nti.app.products.zapier.interfaces.IWebhookSubscriber"
+             name="course.progress_updated"/>
+    <adapter factory=".adapters.details_from_catalog_entry"
+             for="nti.contenttypes.courses.interfaces.ICourseCatalogEntry"
+             provides=".interfaces.ICourseDetails"/>
+    <adapter factory=".adapters.details_from_course"
+             for="nti.contenttypes.courses.interfaces.ICourseInstance"
+             provides=".interfaces.ICourseDetails"/>
+    <adapter factory=".adapters.zapier_user_progress"
+             for="nti.contenttypes.completion.interfaces.IUserProgressUpdatedEvent"
+             provides=".interfaces.IZapierUserProgressUpdatedEvent"/>
+    <adapter factory=".adapters.progress_details"
+             for="nti.contenttypes.completion.interfaces.IProgress"
+             provides=".interfaces.IProgressDetails"/>
+
+    <!-- Subscribers -->
+    <subscriber
+            for="nti.contenttypes.courses.interfaces.ICourseInstance
+             nti.contenttypes.completion.interfaces.IUserProgressUpdatedEvent"
+            handler=".subscribers._handle_progress_update" />
+
+    <!-- Security for ICourseInstanceEnrollmentRecords, the context object used
+         for user progress subscriptions.  -->
+    <adapter factory=".zope_security.EnrollmentRecordRolePermissionManager"
+             provides="zope.securitypolicy.interfaces.IRolePermissionManager"
+             for="nti.contenttypes.courses.interfaces.ICourseInstanceEnrollmentRecord" />
+    <adapter factory=".zope_security.EnrollmentRecordPrincipalPermissionManager"
+             provides="zope.securitypolicy.interfaces.IPrincipalPermissionManager"
+             for="nti.contenttypes.courses.interfaces.ICourseInstanceEnrollmentRecord" />
+
+    <include package="nti.externalization" file="meta.zcml" />
+    <include package="nti.externalization" />
+
+    <ext:registerAutoPackageIO
+        root_interfaces=".interfaces.ICourseDetails
+                         .interfaces.IProgressDetails
+                         .interfaces.IProgressSummary
+                         .interfaces.IExternalUserProgressUpdatedEvent"
+        modules=".model" />
+
+</configure>
