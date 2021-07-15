@@ -27,8 +27,9 @@ from nti.app.products.zapier import USER_SEARCH
 from nti.app.products.zapier import ZAPIER
 from nti.app.products.zapier import ZAPIER_PATH
 
-from nti.app.products.zapier.interfaces import IZapierCourseCatalogCollection
 from nti.app.products.zapier.interfaces import IZapierWorkspace
+
+from nti.app.products.zapier.courseware.interfaces import IZapierCourseCatalogCollection
 
 from nti.appserver.workspaces import IWorkspace
 

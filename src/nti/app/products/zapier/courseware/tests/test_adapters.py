@@ -22,9 +22,9 @@ from redis.client import timestamp_to_datetime
 from zope import component
 from zope import interface
 
-from nti.app.products.zapier.interfaces import IZapierUserProgressUpdatedEvent
+from nti.app.products.zapier.courseware.interfaces import IZapierUserProgressUpdatedEvent
 
-from nti.app.products.zapier.model import ZapierUserProgressUpdatedEvent
+from nti.app.products.zapier.courseware.model import ZapierUserProgressUpdatedEvent
 
 from nti.app.products.zapier.tests import ZapierTestCase
 
@@ -134,7 +134,7 @@ class TestAdapters(ZapierTestCase):
             ))
 
     @WithMockDS
-    @fudge.patch('nti.app.products.zapier.adapters.get_enrollment_record')
+    @fudge.patch('nti.app.products.zapier.courseware.adapters.get_enrollment_record')
     def test_user_progress_conversion(self, get_enrollment_record):
         enrollment_record = fudge.Fake('EnrollmentRecord')
         get_enrollment_record.is_callable().returns(enrollment_record)

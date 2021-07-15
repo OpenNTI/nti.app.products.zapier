@@ -24,12 +24,12 @@ from six import text_type
 
 from zope import interface
 
-from nti.app.products.zapier.interfaces import IExternalUserProgressUpdatedEvent
+from nti.app.products.zapier.courseware.interfaces import IExternalUserProgressUpdatedEvent
 
-from nti.app.products.zapier.model import CourseDetails
-from nti.app.products.zapier.model import ExternalUserProgressUpdatedEvent
-from nti.app.products.zapier.model import ProgressDetails
-from nti.app.products.zapier.model import ProgressSummary
+from nti.app.products.zapier.courseware.model import CourseDetails
+from nti.app.products.zapier.courseware.model import ExternalUserProgressUpdatedEvent
+from nti.app.products.zapier.courseware.model import ProgressDetails
+from nti.app.products.zapier.courseware.model import ProgressSummary
 from nti.app.products.zapier.model import UserDetails
 from nti.app.products.zapier.tests import ZapierTestCase
 
