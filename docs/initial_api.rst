@@ -11,9 +11,11 @@ GET ``/dataserver2/zapier/resolve_me``
 
 Response
 --------
-Return an ``IUserDetails`` instance containing the following info:
+Return a `UserDetails`_ instance containing the following info:
 
-``IUserDetails``
+.. _UserDetails:
+
+``UserDetails``
     :Class:
     :MimeType:
     :Username:
@@ -92,18 +94,19 @@ Triggers
 
 New User Created
 ----------------
-When: ``IPrincipal``, ``IObjectAddedEvent``
+When: ``IUser``, ``IObjectAddedEvent``
 
 Method: POST
 
 Request
 ~~~~~~~
-Sends an ``IUserCreatedEvent`` containing the details of the newly created user:
+Sends a `UserCreatedEvent`_ containing the details of the newly created user:
 
-``IUserCreatedEvent``
-    :EventType: ``user.create``
-    :Data:  Contains an ``object`` attribute with the ``IUserDetails`` of the
-        created user.
+.. _UserCreatedEvent:
+
+``UserCreatedEvent``
+    :EventType: ``user.created``
+    :Data:  Contains the `UserDetails`_ of the created user.
 
 
 New Course Created
@@ -113,42 +116,48 @@ Method: POST
 
 Request
 ~~~~~~~
-Sends an ``ICourseCreatedEvent`` containing the details of the newly created course.
+Sends an `CourseCreatedEvent`_ containing the details of the newly created course.
 
-``ICourseCreatedEvent``
-    :eventType:  ``course.create``
-    :data:  Contains an ``object`` attribute with the ``ICourseDetails`` of the
-        created course.
+.. _CourseCreatedEvent:
 
-``ICourseDetails``
-    :id: NTIID of course instance
-    :providerId:
-    :title:
-    :description:
-    :startDate:
-    :endDate:
+``CourseCreatedEvent``
+    :EventType:  ``course.created``
+    :Data:  Contains the `CourseDetails`_ of the created course.
+
+.. _CourseDetails:
+
+``CourseDetails``
+    :Id: NTIID of course instance
+    :ProviderId:
+    :Title:
+    :Description:
+    :StartDate:
+    :EndDate:
 
 
 New Enrollment Created
 ----------------------
-When: ``ICourseInstanceEnrollmentRecord``, ``IStoreEnrollmentEvent``
+When: ``ICourseInstanceEnrollmentRecord``, ``IObjectAddedEvent``
 
 Method: POST
 
 Request
 ~~~~~~~
-Sends an ``IUserEnrolledEvent`` containing the enrollment information.
+Sends an `UserEnrolledEvent`_ containing the enrollment information.
 
-``IUserEnrolledEvent``
-    :eventType: ``user.enroll``
-    :data: Contains an ``object`` attribute with the ``ICourseEnrollmentDetails``
-        with user and course info.
+.. _UserEnrolledEvent:
 
-``ICourseEnrollmentDetails``
-    :id:  NTIID of the enrollment record
-    :user: The ``IUserDetails`` for the enrolled user.
-    :course: The ``ICourseDetails`` for the associated course.
-    :scope: Name of the enrollment scope.
+``UserEnrolledEvent``
+    :EventType: ``user.enrolled``
+    :Data: Contains the `CourseEnrollmentDetails`_ with user and course info.
+
+.. _CourseEnrollmentDetails:
+
+``CourseEnrollmentDetails``
+    :Id:  NTIID of the enrollment record
+    :User: The `UserDetails`_ for the enrolled user.
+    :Course: The `CourseDetails`_ for the associated course.
+    :Scope: Name of the enrollment scope.
 
 
 Course Progress Updated
@@ -162,16 +171,22 @@ Method: POST
 
 Request
 ~~~~~~~
-Sends an ``UserProgressUpdatedEvent`` containing the completion info:
+Sends an `UserProgressUpdatedEvent`_ containing the completion info:
+
+.. _UserProgressUpdatedEvent:
 
 ``UserProgressUpdatedEvent``
     :EventType: ``course.progress_updated``
-    :Data: Contains the ``ProgressSummary`` with user and course info.
+    :Data: Contains the `ProgressSummary`_ with user and course info.
+
+.. _ProgressSummary:
 
 ``ProgressSummary``
-    :User: The ``IUserDetails`` for the enrolled user.
-    :Course: The ``ICourseDetails`` for the associated course.
-    :Progess: The ``ProgressDetails`` for the associated course.
+    :User: The `UserDetails`_ for the enrolled user.
+    :Course: The `CourseDetails`_ for the associated course.
+    :Progess: The `ProgressDetails`_ for the associated course.
+
+.. _ProgressDetails:
 
 ``ProgressDetails``
     :AbsoluteProgress: Number of items completed in the course.
@@ -211,7 +226,7 @@ Response
 ~~~~~~~~
 Success: ``201 Created``
 
-The body will contain ``IUserDetails`` for the newly created user.
+The body will contain `UserDetails`_ for the newly created user.
 
 
 Enroll User in Course
@@ -221,13 +236,14 @@ POST ``/dataserver2/zapier/enrollments``
 Request
 ~~~~~~~
 
-:username:
-:courseId:
-:scope:
+:Username: Username for the user to be enrolled.
+:CourseId: `Id` of the course to enroll the user in.
+:Scope: One of `Public`, `Purchased`, `ForCredit`, `ForCreditDegree`, or
+    `ForCreditNonDegree`
 
 Response
 ~~~~~~~~
-Returns an ``ICourseEnrollmentDetails`` for the new enrollment.
+Returns an `CourseEnrollmentDetails`_ for the new enrollment.
 
 
 Search
@@ -235,17 +251,25 @@ Search
 
 Search User
 -----------
-GET ``/dataserver2/zapier/user_search``
+POST ``/dataserver2/++etc++hostsites/{site-name}/++etc++site/default/authentication/users``
+
+The link for this should be obtained from the service document located at
+``/dataserver2/service``.  This will provide a set of workspaces, one of which
+is the ``zapier`` workspace.  This workspace provides a link with a rel of
+``user_search`` under the ``Links`` element.  The ``href`` from this will
+provide the proper url.  The workspace can also be accessed off of the user at
+``/dataserver2/users/{authenticated_username}/zapier``, where the
+``authenticated_username`` variable will need replaced with the
 
 Request
 ~~~~~~~
 Search terms are sent via additional path info after the view, e.g.
-`/dataserver2/zapier/user_search/atest`.  Currently limited to 1000 results,
-and no paging is performed.
+`/dataserver2/++etc++hostsites/{site-name}/++etc++site/default/authentication/users/atest`.
+Currently limited to 1000 results, and no paging is performed.
 
 Response
 ~~~~~~~~
-Returns an item list of ``IUserDetails`` objects, e.g.:
+Returns an item list of `UserDetails`_ objects, e.g.:
 
 .. code-block:: json
 
@@ -286,4 +310,4 @@ Request
 
 Response
 ~~~~~~~~
-Returns an item list of ``ICourseDetails`` objects.
+Returns an item list of `CourseDetails`_ objects.
