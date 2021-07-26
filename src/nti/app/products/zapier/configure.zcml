@@ -16,6 +16,7 @@
     <!-- Define permissions we use -->
     <include package="." file="permissions.zcml" />
 
+    <!-- Events available for webhooks -->
     <subscriber
         for="nti.coremetadata.interfaces.IUser zope.lifecycleevent.interfaces.IObjectAddedEvent"
         handler="nti.webhooks.subscribers.dispatch_webhook_event" />

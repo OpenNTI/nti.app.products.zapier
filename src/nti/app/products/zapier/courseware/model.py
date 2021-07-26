@@ -9,6 +9,7 @@ from zope import interface
 
 from zope.interface.interfaces import ObjectEvent
 
+from nti.app.products.zapier.courseware.interfaces import ICourseCreatedEvent
 from nti.app.products.zapier.courseware.interfaces import ICourseDetails
 from nti.app.products.zapier.courseware.interfaces import IExternalUserProgressUpdatedEvent
 from nti.app.products.zapier.courseware.interfaces import IProgressDetails
@@ -51,6 +52,15 @@ class ExternalUserProgressUpdatedEvent(SchemaConfigured):
 
     mime_type = mimeType = 'application/vnd.nextthought.zapier.event.userprogressupdated'
     __external_class_name__ = 'UserProgressUpdatedEvent'
+
+
+@WithRepr
+@interface.implementer(ICourseCreatedEvent, IWebhookPayload)
+class CourseCreatedEvent(SchemaConfigured):
+    createDirectFieldProperties(ICourseCreatedEvent)
+
+    mime_type = mimeType = 'application/vnd.nextthought.zapier.event.coursecreated'
+    __external_class_name__ = 'CourseCreatedEvent'
 
 
 @WithRepr

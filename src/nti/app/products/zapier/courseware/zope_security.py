@@ -15,6 +15,7 @@ from zope.securitypolicy.interfaces import IRolePermissionManager
 from zope.securitypolicy.principalpermission import AnnotationPrincipalPermissionManager
 from zope.securitypolicy.rolepermission import AnnotationRolePermissionManager
 
+from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
 
 from nti.dataserver import authorization as nauth
@@ -41,12 +42,12 @@ class EnrollmentRecordPrincipalPermissionManager(AnnotationPrincipalPermissionMa
                 self.grantPermissionToPrincipal(permission.id, self.__principal_id)
 
 
-@component.adapter(ICourseInstanceEnrollmentRecord)
+@component.adapter(ICourseInstance)
 @interface.implementer(IRolePermissionManager)
-class EnrollmentRecordRolePermissionManager(AnnotationRolePermissionManager):
+class CourseRolePermissionManager(AnnotationRolePermissionManager):
 
     def __init__(self, context):
-        super(EnrollmentRecordRolePermissionManager, self).__init__(context)
+        super(CourseRolePermissionManager, self).__init__(context)
         # We must call this here so that permissions are updated if the state changes
         self.initialize()
 

@@ -10,6 +10,9 @@ from zope import interface
 
 from nti.app.products.zapier.adapters import AbstractWebhookSubscriber
 
+from nti.app.products.zapier.courseware.model import CourseCreatedEvent
+
+from nti.app.products.zapier.interfaces import EVENT_COURSE_CREATED
 from nti.app.products.zapier.interfaces import EVENT_PROGESS_UPDATED
 from nti.app.products.zapier.interfaces import IUserDetails
 from nti.app.products.zapier.interfaces import IWebhookSubscriber
@@ -29,6 +32,7 @@ from nti.contenttypes.completion.interfaces import IUserProgressUpdatedEvent
 
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseInstance
+from nti.contenttypes.courses.interfaces import ICourseInstanceAvailableEvent
 from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
 
 from nti.contenttypes.courses.utils import get_enrollment_record
@@ -37,6 +41,8 @@ from nti.dataserver import authorization as nauth
 
 from nti.webhooks.interfaces import IWebhookPayload
 
+
+# User Progress adapters
 
 @interface.implementer(IZapierUserProgressUpdatedEvent)
 @component.adapter(IUserProgressUpdatedEvent)
@@ -99,6 +105,7 @@ def details_from_catalog_entry(catalog_entry):
         EndDate=catalog_entry.EndDate,
         Title=catalog_entry.title,
         Description=catalog_entry.description,
+        RichDescription=catalog_entry.RichDescription,
         createdTime=created_time,
         lastModified=last_modified
     )
@@ -112,4 +119,23 @@ def details_from_catalog_entry(catalog_entry):
 class CourseProgressUpdatedWebhookSubscriber(AbstractWebhookSubscriber):
     for_ = ICourseInstanceEnrollmentRecord
     when = IZapierUserProgressUpdatedEvent
+    permission_id = nauth.ACT_READ.id
+
+
+# Course Created adapters
+
+@component.adapter(ICourseInstance)
+@interface.implementer(IWebhookPayload)
+def course_payload(user):
+    details = ICourseDetails(user)
+
+    payload = CourseCreatedEvent(EventType=EVENT_COURSE_CREATED,
+                                 Data=details)
+    return payload
+
+
+@interface.implementer(IWebhookSubscriber)
+class CourseCreatedWebhookSubscriber(AbstractWebhookSubscriber):
+    for_ = ICourseInstance
+    when = ICourseInstanceAvailableEvent
     permission_id = nauth.ACT_READ.id

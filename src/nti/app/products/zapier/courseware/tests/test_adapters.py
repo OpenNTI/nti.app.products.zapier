@@ -16,6 +16,7 @@ from hamcrest import has_properties
 from hamcrest import is_
 from hamcrest import not_none
 from hamcrest import same_instance
+from nti.app.products.zapier.interfaces import EVENT_COURSE_CREATED
 
 from redis.client import timestamp_to_datetime
 
@@ -64,7 +65,39 @@ class CourseInstance(courses.CourseInstance):
             return self.catalog_entry
 
 
-class TestAdapters(ZapierTestCase):
+def check_course_details(ext_details, catalog_entry):
+    assert_that(ext_details, has_properties(
+        Id=catalog_entry.ntiid,
+        ProviderId=catalog_entry.ProviderUniqueID,
+        StartDate=catalog_entry.StartDate,
+        EndDate=catalog_entry.EndDate,
+        Title=catalog_entry.title,
+        Description=catalog_entry.description,
+        RichDescription=catalog_entry.RichDescription,
+        createdTime=catalog_entry.createdTime,
+        lastModified=catalog_entry.lastModified
+    ))
+
+
+def _catalog_entry():
+    catalog_entry = CourseCatalogEntry()
+    catalog_entry.ntiid = u"tag:nextthought.com,2011-10:DET-1001"
+    catalog_entry.title = u"Who Are You"
+    catalog_entry.description = u"Who You Think You Are"
+    catalog_entry.RichDescription = u"<p>Who You Think You Are</p>"
+    catalog_entry.ProviderUniqueID = u"DET-1001"
+
+    time_now = time.time()
+    dt_now = timestamp_to_datetime(time_now)
+    catalog_entry.StartDate = dt_now + timedelta(2)
+    catalog_entry.EndDate = dt_now + timedelta(3)
+    catalog_entry.createdTime = time_now + timedelta(1).total_seconds()
+    catalog_entry.lastModified = time_now + timedelta(2).total_seconds()
+
+    return catalog_entry
+
+
+class TestProgressUpdatedAdapters(ZapierTestCase):
 
     def _zapier_user_progress_event(self, course, user):
         progress = Progress(AbsoluteProgress=1,
@@ -85,19 +118,7 @@ class TestAdapters(ZapierTestCase):
                                         'realname': u"John Bender"
                                     })
 
-            catalog_entry = CourseCatalogEntry()
-            catalog_entry.ntiid = u"tag:nextthought.com,2011-10:DET-1001"
-            catalog_entry.title = u"Who Are You"
-            catalog_entry.description = u"Who You Think You Are"
-            catalog_entry.ProviderUniqueID = u"DET-1001"
-
-            time_now = time.time()
-            dt_now = timestamp_to_datetime(time_now)
-            catalog_entry.StartDate = dt_now + timedelta(2)
-            catalog_entry.EndDate = dt_now + timedelta(3)
-            catalog_entry.createdTime = time_now + timedelta(1).total_seconds()
-            catalog_entry.lastModified = time_now + timedelta(2).total_seconds()
-
+            catalog_entry = _catalog_entry()
             course = CourseInstance(catalog_entry)
             zevent = self._zapier_user_progress_event(course, user)
 
@@ -116,16 +137,7 @@ class TestAdapters(ZapierTestCase):
                 LastSeen=datetime_from_timestamp(user.lastSeenTime)
             ))
 
-            assert_that(payload.Data.Course, has_properties(
-                Id=catalog_entry.ntiid,
-                ProviderId=catalog_entry.ProviderUniqueID,
-                StartDate=catalog_entry.StartDate,
-                EndDate=catalog_entry.EndDate,
-                Title=catalog_entry.title,
-                Description=catalog_entry.description,
-                createdTime=catalog_entry.createdTime,
-                lastModified=catalog_entry.lastModified
-            ))
+            check_course_details(payload.Data.Course, catalog_entry)
 
             assert_that(payload.Data.Progress, has_properties(
                 AbsoluteProgress=1,
@@ -166,6 +178,23 @@ class TestAdapters(ZapierTestCase):
                 MaxPossibleProgress=2,
                 PercentageProgress=0.5,
             ))
+
+
+class TestCourseCreatedAdapters(ZapierTestCase):
+
+    @WithMockDS
+    def test_course_created_event(self):
+        with mock_ds.mock_db_trans():
+            catalog_entry = _catalog_entry()
+            course = CourseInstance(catalog_entry)
+
+            payload = component.getAdapter(course,
+                                           IWebhookPayload,
+                                           name="zapier-webhook-delivery")
+
+            assert_that(payload.Data, not_none())
+            assert_that(payload.EventType, EVENT_COURSE_CREATED)
+            check_course_details(payload.Data, catalog_entry)
 
 
 @contextlib.contextmanager

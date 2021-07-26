@@ -23,7 +23,13 @@ from nti.app.testing.application_webtest import ApplicationLayerTest
 
 from nti.app.testing.decorators import WithSharedApplicationMockDS
 
+from nti.contenttypes.courses.courses import CourseAdministrativeLevel
+from nti.contenttypes.courses.courses import CourseInstance
+
 from nti.contenttypes.courses.enrollment import DefaultCourseInstanceEnrollmentRecord
+
+from nti.contenttypes.courses.interfaces import ICourseEnrollmentManager
+from nti.contenttypes.courses.interfaces import ICourseEnrollments
 
 from nti.dataserver.authorization import ACT_READ
 from nti.dataserver.authorization import ROLE_ADMIN
@@ -65,21 +71,29 @@ class TestEnrollmentRecordPermissions(ApplicationLayerTest):
             not_joe = self._get_user('not.regular.joe')
             set_user_creation_site(not_joe, site_name)
 
-            record = DefaultCourseInstanceEnrollmentRecord(Principal=joe)
-
             # Just need to ensure it's under the site, somewhere
-            record.__parent__ = getSite().getSiteManager()
+            admin_level = CourseAdministrativeLevel()
+            getSite().getSiteManager()['admin'] = admin_level
+            course = CourseInstance()
+            admin_level['course'] = course
+
+            ICourseEnrollmentManager(course).enroll(joe)
+            record = ICourseEnrollments(course).get_enrollment_for_principal(joe)
 
             with zope_interaction(joe.username):
+                assert_that(checkPermission(ACT_READ.id, course), is_(False))
                 assert_that(checkPermission(ACT_READ.id, record), is_(True))
 
             with zope_interaction(site_admin.username):
+                assert_that(checkPermission(ACT_READ.id, course), is_(True))
                 assert_that(checkPermission(ACT_READ.id, record), is_(True))
 
             with zope_interaction(nti_admin.username):
+                assert_that(checkPermission(ACT_READ.id, course), is_(True))
                 assert_that(checkPermission(ACT_READ.id, record), is_(True))
 
             with zope_interaction(not_joe.username):
+                assert_that(checkPermission(ACT_READ.id, course), is_(False))
                 assert_that(checkPermission(ACT_READ.id, record), is_(False))
 
             ppm = IPrincipalPermissionManager(record)
@@ -87,7 +101,7 @@ class TestEnrollmentRecordPermissions(ApplicationLayerTest):
             assert_that(principals, has_length(1))
             assert_that(principals, contains((joe.username, Allow)))
 
-            ppm = IRolePermissionManager(record)
+            ppm = IRolePermissionManager(course)
             roles = ppm.getRolesForPermission(ACT_READ.id)
             assert_that(roles, has_length(1))
             assert_that(roles, contains((ROLE_ADMIN.id, Allow)))
