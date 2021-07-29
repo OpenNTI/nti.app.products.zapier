@@ -40,19 +40,3 @@ class EnrollmentRecordPrincipalPermissionManager(AnnotationPrincipalPermissionMa
         if self.__principal_id:
             for permission in (nauth.ACT_READ,):
                 self.grantPermissionToPrincipal(permission.id, self.__principal_id)
-
-
-@component.adapter(ICourseInstance)
-@interface.implementer(IRolePermissionManager)
-class CourseRolePermissionManager(AnnotationRolePermissionManager):
-
-    def __init__(self, context):
-        super(CourseRolePermissionManager, self).__init__(context)
-        # We must call this here so that permissions are updated if the state changes
-        self.initialize()
-
-    def initialize(self):
-        # Initialize with perms for NT admins, site admins will pick up
-        # access via the site.
-        for permission in (nauth.ACT_READ,):
-            self.grantPermissionToRole(permission.id, nauth.ROLE_ADMIN.id)

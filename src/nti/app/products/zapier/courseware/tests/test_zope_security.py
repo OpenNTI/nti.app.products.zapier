@@ -7,6 +7,8 @@ from __future__ import print_function
 
 from hamcrest import assert_that
 from hamcrest import contains
+from hamcrest import greater_than
+from hamcrest import has_item
 from hamcrest import has_length
 from hamcrest import is_
 
@@ -98,13 +100,13 @@ class TestEnrollmentRecordPermissions(ApplicationLayerTest):
 
             ppm = IPrincipalPermissionManager(record)
             principals = ppm.getPrincipalsForPermission(ACT_READ.id)
-            assert_that(principals, has_length(1))
+            assert_that(principals, has_length(greater_than(0)))
             assert_that(principals, contains((joe.username, Allow)))
 
             ppm = IRolePermissionManager(course)
             roles = ppm.getRolesForPermission(ACT_READ.id)
-            assert_that(roles, has_length(1))
-            assert_that(roles, contains((ROLE_ADMIN.id, Allow)))
+            assert_that(roles, has_length(greater_than(0)))
+            assert_that(roles, has_item((ROLE_ADMIN.id, Allow)))
 
             # If the record has no Principal, possible given the interface
             # specifies Principal as optional

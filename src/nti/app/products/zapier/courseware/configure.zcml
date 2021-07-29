@@ -54,9 +54,6 @@
 
     <!-- Security for ICourseInstanceEnrollmentRecords, the context object used
          for user progress subscriptions.  -->
-    <adapter factory=".zope_security.CourseRolePermissionManager"
-             provides="zope.securitypolicy.interfaces.IRolePermissionManager"
-             for="nti.contenttypes.courses.interfaces.ICourseInstance" />
     <adapter factory=".zope_security.EnrollmentRecordPrincipalPermissionManager"
              provides="zope.securitypolicy.interfaces.IPrincipalPermissionManager"
              for="nti.contenttypes.courses.interfaces.ICourseInstanceEnrollmentRecord" />
