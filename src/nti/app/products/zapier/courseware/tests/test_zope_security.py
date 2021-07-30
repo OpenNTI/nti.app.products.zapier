@@ -17,7 +17,6 @@ from zope.security import checkPermission
 from zope.securitypolicy.interfaces import IPrincipalPermissionManager
 
 from zope.securitypolicy.interfaces import IPrincipalRoleManager
-from zope.securitypolicy.interfaces import IRolePermissionManager
 
 from zope.securitypolicy.settings import Allow
 
@@ -32,6 +31,7 @@ from nti.contenttypes.courses.enrollment import DefaultCourseInstanceEnrollmentR
 
 from nti.contenttypes.courses.interfaces import ICourseEnrollmentManager
 from nti.contenttypes.courses.interfaces import ICourseEnrollments
+from nti.contenttypes.courses.interfaces import ICourseRolePermissionManager
 
 from nti.dataserver.authorization import ACT_READ
 from nti.dataserver.authorization import ROLE_ADMIN
@@ -82,6 +82,11 @@ class TestEnrollmentRecordPermissions(ApplicationLayerTest):
             ICourseEnrollmentManager(course).enroll(joe)
             record = ICourseEnrollments(course).get_enrollment_for_principal(joe)
 
+            # Need to simulate initialization tha happens when the course
+            # becomes available
+            rpm = ICourseRolePermissionManager(course)
+            rpm.initialize()
+
             with zope_interaction(joe.username):
                 assert_that(checkPermission(ACT_READ.id, course), is_(False))
                 assert_that(checkPermission(ACT_READ.id, record), is_(True))
@@ -103,8 +108,7 @@ class TestEnrollmentRecordPermissions(ApplicationLayerTest):
             assert_that(principals, has_length(greater_than(0)))
             assert_that(principals, contains((joe.username, Allow)))
 
-            ppm = IRolePermissionManager(course)
-            roles = ppm.getRolesForPermission(ACT_READ.id)
+            roles = rpm.getRolesForPermission(ACT_READ.id)
             assert_that(roles, has_length(greater_than(0)))
             assert_that(roles, has_item((ROLE_ADMIN.id, Allow)))
 
