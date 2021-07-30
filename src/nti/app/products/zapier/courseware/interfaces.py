@@ -18,6 +18,8 @@ from nti.base.interfaces import ILastModified
 
 from nti.base.schema import Number
 
+from nti.contentfragments.schema import HTMLContentFragment
+
 from nti.contenttypes.completion.interfaces import IProgress
 
 from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
@@ -56,6 +58,12 @@ class ICourseDetails(ILastModified):
     Description = ValidText(title=u"The human-readable description",
                             default=u'',
                             required=False)
+
+    RichDescription = HTMLContentFragment(title=u"An embelished version of the description of this course",
+                                          description=u"""An HTMLContentFragment providing an embelished description
+                                          for the course.  This provides storage for a description with basic html formatting""",
+                                          required=False,
+                                          default=u'')
 
 
 class IZapierCourseCatalogCollection(ICatalogCollection):
@@ -138,3 +146,14 @@ class IZapierUserProgressUpdatedEvent(IObjectEvent):
                       description=u"The current progress information for the "
                                   u"related course and user.",
                       required=True)
+
+
+class ICourseCreatedEvent(IExternalEvent):
+    """
+    Sent to any applicable external subscriptions when a new course has
+    been created.
+    """
+
+    Data = Object(ICourseDetails,
+                  title=u"Information for the newly created course.",
+                  required=True)
