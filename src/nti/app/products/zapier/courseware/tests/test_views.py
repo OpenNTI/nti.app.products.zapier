@@ -110,13 +110,14 @@ class TestSubscriptions(ApplicationLayerTest, ZapierTestMixin):
         with mock_ds.mock_db_trans(site_name="janux.ou.edu"):
             subscription = find_object_with_ntiid(subscription_ntiid)
             assert_that(subscription, has_length(1))
-            assert_that(json.loads(subscription.values()[0].request.body),
+            assert_that(json.loads(subscription.values()[0].payload_data),
                         has_entries({
                             'MimeType': CourseCreatedEvent.mimeType,
                             'Data': has_entries({
                                 'MimeType': CourseDetails.mimeType
                             })
                         }))
+
     @WithSharedApplicationMockDS(users=('site.admin',
                                         'nti.admin'),
                                  testapp=True,
