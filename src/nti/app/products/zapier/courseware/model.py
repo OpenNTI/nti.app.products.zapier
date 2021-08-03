@@ -11,9 +11,11 @@ from zope.interface.interfaces import ObjectEvent
 
 from nti.app.products.zapier.courseware.interfaces import ICourseCreatedEvent
 from nti.app.products.zapier.courseware.interfaces import ICourseDetails
+from nti.app.products.zapier.courseware.interfaces import ICourseEnrollmentDetails
 from nti.app.products.zapier.courseware.interfaces import IExternalUserProgressUpdatedEvent
 from nti.app.products.zapier.courseware.interfaces import IProgressDetails
 from nti.app.products.zapier.courseware.interfaces import IProgressSummary
+from nti.app.products.zapier.courseware.interfaces import IUserEnrolledEvent
 from nti.app.products.zapier.courseware.interfaces import IZapierUserProgressUpdatedEvent
 
 from nti.externalization.representation import WithRepr
@@ -107,3 +109,20 @@ class ProgressDetails(object):
         result = "%s(AbsoluteProgress=%r, MaxPossibleProgress=%r)" \
                  % (clazz, self.AbsoluteProgress, self.MaxPossibleProgress)
         return result
+
+
+@WithRepr
+@interface.implementer(ICourseEnrollmentDetails)
+class CourseEnrollmentDetails(SchemaConfigured):
+    createDirectFieldProperties(ICourseEnrollmentDetails)
+
+    mime_type = mimeType = 'application/vnd.nextthought.zapier.courseenrollmentdetails'
+
+
+@WithRepr
+@interface.implementer(IUserEnrolledEvent, IWebhookPayload)
+class UserEnrolledEvent(SchemaConfigured):
+    createDirectFieldProperties(IUserEnrolledEvent)
+
+    mime_type = mimeType = 'application/vnd.nextthought.zapier.event.userenrolled'
+    __external_class_name__ = 'UserProgressUpdatedEvent'

@@ -22,6 +22,8 @@ from nti.app.products.courseware.tests import PersistentInstructedCourseApplicat
 
 from nti.app.products.zapier.courseware.model import CourseCreatedEvent
 from nti.app.products.zapier.courseware.model import CourseDetails
+from nti.app.products.zapier.courseware.model import CourseEnrollmentDetails
+from nti.app.products.zapier.courseware.model import UserEnrolledEvent
 
 from nti.app.products.zapier.tests import ZapierTestMixin
 
@@ -150,6 +152,87 @@ class TestSubscriptions(ApplicationLayerTest, ZapierTestMixin):
             self._test_course_created(new_admin_href, nti_admin_env, nti_admin_env)
             self._test_course_created(new_admin_href, site_admin_env, nti_admin_env)
             self._test_course_created(new_admin_href, nti_admin_env, site_admin_env)
+        finally:
+            # Remove the admin level to avoid issues with rerunning test
+            with mock_dataserver.mock_db_trans(site_name='janux.ou.edu'):
+                library = component.getUtility(IContentPackageLibrary)
+                enumeration = IDelimitedHierarchyContentPackageEnumeration(library)
+                # pylint: disable=no-member
+                path = enumeration.root.absolute_path + "/Courses/ZapierTestKey"
+                shutil.rmtree(path, True)
+
+    def _enroll(self, username, ext_course_instance, **kwargs):
+        enroll_url = '/dataserver2/users/%s/@@UserEnrollments' % username
+        res = self.testapp.post_json(enroll_url,
+                                     {'ntiid': ext_course_instance['NTIID']},
+                                     **kwargs)
+        return res.json_body
+
+    def _test_user_enrolled(self, admin_level_href, subscription_env, enrolled_env, username):
+        target_url = "https://localhost/user_enrolled"
+        res = self._create_subscription("user", "enrolled", target_url,
+                                        extra_environ=subscription_env)
+        subscription_ntiid = res.json_body['Id']
+        with mock_ds.mock_db_trans(site_name="janux.ou.edu"):
+            subscription = find_object_with_ntiid(subscription_ntiid)
+            assert_that(subscription, has_length(0))
+
+        course = self._create_course(admin_level_href, extra_environ=enrolled_env)
+        self._enroll(username, course, extra_environ=enrolled_env)
+
+        with mock_ds.mock_db_trans(site_name="janux.ou.edu"):
+            subscription = find_object_with_ntiid(subscription_ntiid)
+            assert_that(subscription, has_length(1))
+            assert_that(json.loads(subscription.values()[0].payload_data),
+                        has_entries({
+                            'MimeType': UserEnrolledEvent.mimeType,
+                            'Data': has_entries({
+                                'MimeType': CourseEnrollmentDetails.mimeType,
+                                'User': has_entries({
+                                    'Username': username,
+                                })
+                            })
+                        }))
+
+    @WithSharedApplicationMockDS(users=('site.admin',
+                                        'nti.admin',
+                                        'test.user'),
+                                 testapp=True,
+                                 default_authenticate=True)
+    def test_user_enrolled(self):
+        nti_admin_env = self._make_extra_environ(user='nti.admin')
+
+        site_admin_env = self._make_extra_environ(user='site.admin')
+        with mock_ds.mock_db_trans(site_name="janux.ou.edu"):
+            site = getSite()
+            site_name = site.__name__
+
+            # User to be enrolled
+            test_user = self._get_user('test.user')
+            username = test_user.username
+            set_user_creation_site(test_user, site_name)
+
+            # A site admin who can administer user to be enrolled
+            site_admin = self._get_user('site.admin')
+            set_user_creation_site(site_admin, site_name)
+            prm = IPrincipalRoleManager(site)
+            prm.assignRoleToPrincipal(ROLE_SITE_ADMIN_NAME, site_admin.username)
+
+            # An nti admin (nti.admin) w/ no principal permissions
+            nti_admin = self._get_user('nti.admin')
+            self._assign_role(ROLE_ADMIN, username=nti_admin.username)
+
+        # Create an admin level to store our course in
+        admin_res = self._create_admin_level('ZapierTestKey',
+                                             extra_environ=nti_admin_env)
+        new_admin_href = admin_res['href']
+        try:
+            # Test w/ both envs and mixed, since this can affect subscription
+            # security checks and, hence, the subscription is "applicable"
+            self._test_user_enrolled(new_admin_href, nti_admin_env, nti_admin_env, username)
+            self._test_user_enrolled(new_admin_href, site_admin_env, site_admin_env, username)
+            self._test_user_enrolled(new_admin_href, nti_admin_env, site_admin_env, username)
+            self._test_user_enrolled(new_admin_href, site_admin_env, nti_admin_env, username)
         finally:
             # Remove the admin level to avoid issues with rerunning test
             with mock_dataserver.mock_db_trans(site_name='janux.ou.edu'):

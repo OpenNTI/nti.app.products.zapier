@@ -22,10 +22,14 @@ from nti.app.products.zapier.courseware.interfaces import IProgressDetails
 from nti.app.products.zapier.courseware.interfaces import IZapierUserProgressUpdatedEvent
 
 from nti.app.products.zapier.courseware.model import CourseDetails
+from nti.app.products.zapier.courseware.model import CourseEnrollmentDetails
 from nti.app.products.zapier.courseware.model import ExternalUserProgressUpdatedEvent
 from nti.app.products.zapier.courseware.model import ProgressDetails
 from nti.app.products.zapier.courseware.model import ProgressSummary
+from nti.app.products.zapier.courseware.model import UserEnrolledEvent
 from nti.app.products.zapier.courseware.model import ZapierUserProgressUpdatedEvent
+
+from nti.app.products.zapier.interfaces import EVENT_USER_ENROLLED
 
 from nti.contenttypes.completion.interfaces import IProgress
 from nti.contenttypes.completion.interfaces import IUserProgressUpdatedEvent
@@ -39,10 +43,14 @@ from nti.contenttypes.courses.utils import get_enrollment_record
 
 from nti.dataserver import authorization as nauth
 
+from nti.ntiids.oids import to_external_ntiid_oid
+
 from nti.webhooks.interfaces import IWebhookPayload
 
 
 # User Progress adapters
+from zope.lifecycleevent import IObjectAddedEvent
+
 
 @interface.implementer(IZapierUserProgressUpdatedEvent)
 @component.adapter(IUserProgressUpdatedEvent)
@@ -139,3 +147,29 @@ class CourseCreatedWebhookSubscriber(AbstractWebhookSubscriber):
     for_ = ICourseInstance
     when = ICourseInstanceAvailableEvent
     permission_id = nauth.ACT_READ.id
+
+
+# User Enrolled adapters
+
+@interface.implementer(IWebhookSubscriber)
+class UserEnrolledWebhookSubscriber(AbstractWebhookSubscriber):
+    for_ = ICourseInstanceEnrollmentRecord
+    when = IObjectAddedEvent
+    permission_id = nauth.ACT_READ.id
+
+
+@component.adapter(ICourseInstanceEnrollmentRecord, IObjectAddedEvent)
+@interface.implementer(IWebhookPayload)
+def user_enrolled_payload(record, event):
+    user_details = IUserDetails(record.Principal)
+    course_details = ICourseDetails(record.CourseInstance)
+
+    ntiid = to_external_ntiid_oid(record)
+    course_enrollment_details = CourseEnrollmentDetails(Id=ntiid,
+                                                        User=user_details,
+                                                        Course=course_details,
+                                                        Scope=record.Scope)
+
+    payload = UserEnrolledEvent(EventType=EVENT_USER_ENROLLED,
+                                Data=course_enrollment_details)
+    return payload

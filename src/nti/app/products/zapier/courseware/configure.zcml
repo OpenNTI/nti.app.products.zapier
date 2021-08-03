@@ -11,6 +11,10 @@
              .interfaces.IZapierUserProgressUpdatedEvent"
         handler="nti.webhooks.subscribers.dispatch_webhook_event" />
     <subscriber
+        for="nti.contenttypes.courses.interfaces.ICourseInstanceEnrollmentRecord
+             zope.lifecycleevent.interfaces.IObjectAddedEvent"
+        handler="nti.webhooks.subscribers.dispatch_webhook_event" />
+    <subscriber
             for="nti.contenttypes.courses.interfaces.ICourseInstance
                  nti.contenttypes.courses.interfaces.ICourseInstanceAvailableEvent"
             handler="nti.webhooks.subscribers.dispatch_webhook_event" />
@@ -25,6 +29,11 @@
                   .interfaces.IZapierUserProgressUpdatedEvent"
              provides="nti.webhooks.interfaces.IWebhookPayload"
              name="zapier-webhook-delivery"/>
+    <adapter factory=".adapters.user_enrolled_payload"
+             for="nti.contenttypes.courses.interfaces.ICourseInstanceEnrollmentRecord
+                  zope.lifecycleevent.interfaces.IObjectAddedEvent"
+             provides="nti.webhooks.interfaces.IWebhookPayload"
+             name="zapier-webhook-delivery"/>
     <adapter factory=".adapters.CourseProgressUpdatedWebhookSubscriber"
              for="pyramid.interfaces.IRequest"
              provides="nti.app.products.zapier.interfaces.IWebhookSubscriber"
@@ -33,6 +42,10 @@
              for="pyramid.interfaces.IRequest"
              provides="nti.app.products.zapier.interfaces.IWebhookSubscriber"
              name="course.created"/>
+    <adapter factory=".adapters.UserEnrolledWebhookSubscriber"
+             for="pyramid.interfaces.IRequest"
+             provides="nti.app.products.zapier.interfaces.IWebhookSubscriber"
+             name="user.enrolled"/>
     <adapter factory=".adapters.details_from_catalog_entry"
              for="nti.contenttypes.courses.interfaces.ICourseCatalogEntry"
              provides=".interfaces.ICourseDetails"/>
@@ -66,6 +79,8 @@
                          .interfaces.ICourseCreatedEvent
                          .interfaces.IProgressDetails
                          .interfaces.IProgressSummary
+                         .interfaces.IUserEnrolledEvent
+                         .interfaces.ICourseEnrollmentDetails
                          .interfaces.IExternalUserProgressUpdatedEvent"
         modules=".model" />
 
