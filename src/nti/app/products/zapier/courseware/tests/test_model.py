@@ -96,6 +96,7 @@ class TestModel(ZapierTestCase):
         ext_obj = toExternalObject(io, policy_name="webhook-delivery")
         assert_that(ext_obj, has_entries({
             "MimeType": ExternalUserProgressUpdatedEvent.mime_type,
+            "Class": "UserProgressUpdatedEvent",
             "Data": not_none(),
         }))
 
@@ -156,6 +157,7 @@ class TestModel(ZapierTestCase):
         ext_obj = toExternalObject(io, policy_name="webhook-delivery")
         assert_that(ext_obj, has_entries({
             "MimeType": UserEnrolledEvent.mime_type,
+            "Class": "UserEnrolledEvent",
             "EventType": EVENT_USER_ENROLLED,
             "Data": not_none(),
         }))
