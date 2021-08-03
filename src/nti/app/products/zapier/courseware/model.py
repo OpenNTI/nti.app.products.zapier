@@ -125,4 +125,4 @@ class UserEnrolledEvent(SchemaConfigured):
     createDirectFieldProperties(IUserEnrolledEvent)
 
     mime_type = mimeType = 'application/vnd.nextthought.zapier.event.userenrolled'
-    __external_class_name__ = 'UserProgressUpdatedEvent'
+    __external_class_name__ = 'UserEnrolledEvent'
