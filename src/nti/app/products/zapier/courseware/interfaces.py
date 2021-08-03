@@ -22,12 +22,14 @@ from nti.contentfragments.schema import HTMLContentFragment
 
 from nti.contenttypes.completion.interfaces import IProgress
 
+from nti.contenttypes.courses.interfaces import ENROLLMENT_SCOPE_VOCABULARY
 from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
 
 from nti.ntiids.schema import ValidNTIID
 
 from nti.schema.field import Float
 from nti.schema.field import Object
+from nti.schema.field import ValidChoice
 from nti.schema.field import ValidDatetime
 from nti.schema.field import ValidText
 from nti.schema.field import ValidTextLine
@@ -155,5 +157,34 @@ class ICourseCreatedEvent(IExternalEvent):
     """
 
     Data = Object(ICourseDetails,
+                  title=u"Information for the newly created course.",
+                  required=True)
+
+
+class ICourseEnrollmentDetails(interface.Interface):
+    """
+    Information regarding a user's enrollment in a course.
+    """
+
+    Id = ValidNTIID(title=u"Enrollment record NTIID")
+
+    User = Object(IUserDetails,
+                  title=u"The user information tied to the enrollment.",
+                  required=True)
+
+    Course = Object(ICourseDetails,
+                    title=u"The course information tied to the enrollment.",
+                    required=True)
+
+    Scope = ValidChoice(title=u"The name of the enrollment scope",
+                        vocabulary=ENROLLMENT_SCOPE_VOCABULARY)
+
+
+class IUserEnrolledEvent(IExternalEvent):
+    """
+    Sent to any applicable external subscriptions when a new course
+    enrollment has been created (i.e. when a user has been enrolled).
+    """
+    Data = Object(ICourseEnrollmentDetails,
                   title=u"Information for the newly created course.",
                   required=True)

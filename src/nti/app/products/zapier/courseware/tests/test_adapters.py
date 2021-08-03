@@ -16,16 +16,24 @@ from hamcrest import has_properties
 from hamcrest import is_
 from hamcrest import not_none
 from hamcrest import same_instance
-from nti.app.products.zapier.interfaces import EVENT_COURSE_CREATED
+
+from persistent import Persistent
 
 from redis.client import timestamp_to_datetime
 
 from zope import component
 from zope import interface
 
+from zope.container.contained import Contained
+
+from zope.lifecycleevent import ObjectAddedEvent
+
 from nti.app.products.zapier.courseware.interfaces import IZapierUserProgressUpdatedEvent
 
 from nti.app.products.zapier.courseware.model import ZapierUserProgressUpdatedEvent
+
+from nti.app.products.zapier.interfaces import EVENT_COURSE_CREATED
+from nti.app.products.zapier.interfaces import EVENT_USER_ENROLLED
 
 from nti.app.products.zapier.tests import ZapierTestCase
 
@@ -38,6 +46,7 @@ from nti.contenttypes.courses import courses
 
 from nti.contenttypes.courses.catalog import CourseCatalogEntry
 
+from nti.contenttypes.courses.interfaces import ES_CREDIT_DEGREE
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
 from nti.contenttypes.courses.interfaces import ICourseInstance
@@ -195,6 +204,54 @@ class TestCourseCreatedAdapters(ZapierTestCase):
             assert_that(payload.Data, not_none())
             assert_that(payload.EventType, EVENT_COURSE_CREATED)
             check_course_details(payload.Data, catalog_entry)
+
+
+@interface.implementer(ICourseInstanceEnrollmentRecord)
+class TestEnrollmentRecord(Contained, Persistent):
+
+    def __init__(self, course, user, scope):
+        self.CourseInstance = course
+        self.Principal = user
+        self.Scope = scope
+
+
+class TestUserEnrolledAdapters(ZapierTestCase):
+
+    @WithMockDS
+    def test_user_enrolled_event(self):
+        with mock_ds.mock_db_trans() as conn:
+            user = User.create_user(username=u"jbender",
+                                    external_value={
+                                        'email': u"jbender@shermerhs.edu",
+                                        'realname': u"John Bender"
+                                    })
+
+            catalog_entry = _catalog_entry()
+            course = CourseInstance(catalog_entry)
+            record = TestEnrollmentRecord(course, user, ES_CREDIT_DEGREE)
+            conn.add(record)
+            event = ObjectAddedEvent(record)
+
+            payload = \
+                component.getMultiAdapter((event.object, event),
+                                          IWebhookPayload,
+                                          name="zapier-webhook-delivery")
+
+            assert_that(payload.EventType, EVENT_USER_ENROLLED)
+            assert_that(payload.Data, not_none())
+            assert_that(payload.Data.Id, not_none())
+            assert_that(payload.Data.Scope, ES_CREDIT_DEGREE)
+
+            check_course_details(payload.Data.Course, catalog_entry)
+
+            assert_that(payload.Data.User, has_properties(
+                Username=user.username,
+                Email="jbender@shermerhs.edu",
+                Realname=u"John Bender",
+                createdTime=user.createdTime,
+                LastLogin=datetime_from_timestamp(user.lastLoginTime),
+                LastSeen=datetime_from_timestamp(user.lastSeenTime)
+            ))
 
 
 @contextlib.contextmanager
