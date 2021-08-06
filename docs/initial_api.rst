@@ -154,7 +154,6 @@ Sends an `UserEnrolledEvent`_ containing the enrollment information.
 .. _CourseEnrollmentDetails:
 
 ``CourseEnrollmentDetails``
-    :Id:  NTIID of the enrollment record
     :User: The `UserDetails`_ for the enrolled user.
     :Course: The `CourseDetails`_ for the associated course.
     :Scope: Name of the enrollment scope.
