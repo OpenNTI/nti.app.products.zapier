@@ -156,7 +156,8 @@ Sends an `UserEnrolledEvent`_ containing the enrollment information.
 ``CourseEnrollmentDetails``
     :User: The `UserDetails`_ for the enrolled user.
     :Course: The `CourseDetails`_ for the associated course.
-    :Scope: Name of the enrollment scope.
+    :Scope: One of `Public`, `Purchased`, `ForCredit`, `ForCreditDegree`, or
+        `ForCreditNonDegree`
 
 
 Course Progress Updated
