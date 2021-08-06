@@ -209,11 +209,7 @@ provide the proper url.  The workspace can also be accessed off of the user at
 ``authenticated_username`` variable will need replaced with the
 
 Create a new user with the given information.  This will send an email to the
-newly created user with a link to finish setting up their account.  A
-``success`` param is required to use as the base url to provide for this
-purpose.  This will need to be a page that submits the ``username`` and ``id``
-provided as parameters in the link to the `/dataserver2/logon.reset.passcode`
-view.
+newly created user with a link to finish setting up their account.
 
 Request
 ~~~~~~~
@@ -233,6 +229,10 @@ Enroll User in Course
 ---------------------
 POST ``/dataserver2/zapier/enrollments``
 
+Enrolls the provided user in the course with given scope, though scope is
+optional and will default to `Public` if not provided.  The link for the view
+is available off the ``zapier`` workspace with a rel of ``enroll_user``.
+
 Request
 ~~~~~~~
 
@@ -243,8 +243,9 @@ Request
 
 Response
 ~~~~~~~~
-Returns an `CourseEnrollmentDetails`_ for the new enrollment.
-
+Returns an `CourseEnrollmentDetails`_ for the new enrollment.  If the record is
+newly created, a status of ``201 Created`` will be returned.  If the user was
+already enrolled, a status of ``200 OK`` will be returned instead.
 
 Search
 ======
