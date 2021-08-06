@@ -22,6 +22,7 @@ from nti.app.authentication.interfaces import ISiteAuthentication
 from nti.app.products.courseware.interfaces import IAvailableCoursesProvider
 
 from nti.app.products.zapier import AUTH_USERS_PATH
+from nti.app.products.zapier import ENROLLMENTS_PATH
 from nti.app.products.zapier import SUBSCRIPTIONS_VIEW
 from nti.app.products.zapier import USER_SEARCH
 from nti.app.products.zapier import ZAPIER
@@ -112,6 +113,11 @@ class _ZapierWorkspace(Contained):
                               method='POST',
                               elements=(ZAPIER_PATH,
                                         SUBSCRIPTIONS_VIEW)))
+            links.append(Link(self._ds_folder(),
+                              rel='enroll_user',
+                              method='POST',
+                              elements=(ZAPIER_PATH,
+                                        ENROLLMENTS_PATH)))
         return tuple(links)
 
     def __getitem__(self, key):

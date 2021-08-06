@@ -12,6 +12,9 @@ MessageFactory = zope.i18nmessageid.MessageFactory(__name__)
 #: Path of users off of our ISiteAuthentication
 AUTH_USERS_PATH = "users"
 
+#: Path name for enrollments path adapter
+ENROLLMENTS_PATH = "enrollments"
+
 #: Zapier workspace
 ZAPIER = "zapier"
 

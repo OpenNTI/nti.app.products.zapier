@@ -139,8 +139,7 @@ class TestModel(ZapierTestCase):
         user_details = self._user_details(username)
         course_details = self._course_details(course_provider_id)
 
-        enrollment = CourseEnrollmentDetails(Id=enrollment_id,
-                                             User=user_details,
+        enrollment = CourseEnrollmentDetails(User=user_details,
                                              Course=course_details,
                                              Scope=ES_CREDIT_NONDEGREE)
 
@@ -164,7 +163,6 @@ class TestModel(ZapierTestCase):
 
         assert_that(ext_obj['Data'], has_entries({
             "MimeType": CourseEnrollmentDetails.mime_type,
-            "Id": u"tag:nextthought.com,2021:abc123",
             "User": not_none(),
             "Course": not_none(),
             "Scope": ES_CREDIT_NONDEGREE,

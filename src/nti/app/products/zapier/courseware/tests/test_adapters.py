@@ -239,7 +239,6 @@ class TestUserEnrolledAdapters(ZapierTestCase):
 
             assert_that(payload.EventType, EVENT_USER_ENROLLED)
             assert_that(payload.Data, not_none())
-            assert_that(payload.Data.Id, not_none())
             assert_that(payload.Data.Scope, ES_CREDIT_DEGREE)
 
             check_course_details(payload.Data.Course, catalog_entry)

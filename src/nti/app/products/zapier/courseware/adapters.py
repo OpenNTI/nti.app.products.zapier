@@ -8,7 +8,11 @@ from __future__ import print_function
 from zope import component
 from zope import interface
 
+from nti.app.products.courseware.interfaces import ICourseInstanceEnrollment
+
 from nti.app.products.zapier.adapters import AbstractWebhookSubscriber
+
+from nti.app.products.zapier.courseware.interfaces import ICourseEnrollmentDetails
 
 from nti.app.products.zapier.courseware.model import CourseCreatedEvent
 
@@ -43,7 +47,7 @@ from nti.contenttypes.courses.utils import get_enrollment_record
 
 from nti.dataserver import authorization as nauth
 
-from nti.ntiids.oids import to_external_ntiid_oid
+from nti.dataserver.users import User
 
 from nti.webhooks.interfaces import IWebhookPayload
 
@@ -158,15 +162,28 @@ class UserEnrolledWebhookSubscriber(AbstractWebhookSubscriber):
     permission_id = nauth.ACT_READ.id
 
 
+@component.adapter(ICourseInstanceEnrollment)
+@interface.implementer(ICourseEnrollmentDetails)
+def enrollment_details(record):
+    user = User.get_user(record.Username)
+    user_details = IUserDetails(user)
+    course_details = ICourseDetails(record.CourseInstance)
+
+    scope = getattr(record, 'RealEnrollmentStatus', None)
+    course_enrollment_details = CourseEnrollmentDetails(User=user_details,
+                                                        Course=course_details,
+                                                        Scope=scope)
+
+    return course_enrollment_details
+
+
 @component.adapter(ICourseInstanceEnrollmentRecord, IObjectAddedEvent)
 @interface.implementer(IWebhookPayload)
-def user_enrolled_payload(record, event):
+def user_enrolled_payload(record, _event):
     user_details = IUserDetails(record.Principal)
     course_details = ICourseDetails(record.CourseInstance)
 
-    ntiid = to_external_ntiid_oid(record)
-    course_enrollment_details = CourseEnrollmentDetails(Id=ntiid,
-                                                        User=user_details,
+    course_enrollment_details = CourseEnrollmentDetails(User=user_details,
                                                         Course=course_details,
                                                         Scope=record.Scope)
 
