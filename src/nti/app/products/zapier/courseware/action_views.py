@@ -87,7 +87,7 @@ class EnrollUserView(AbstractUserCourseEnrollView):
                              None)
 
         user = User.get_user(username)
-        if not user or not IUser.providedBy(user):
+        if not IUser.providedBy(user):
             raise_json_error(self.request,
                              hexc.HTTPUnprocessableEntity,
                              {
