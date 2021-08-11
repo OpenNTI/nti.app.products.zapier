@@ -29,6 +29,8 @@ from nti.assessment.submission import QuestionSubmission
 from nti.contentlibrary.interfaces import IContentPackageLibrary
 from nti.contentlibrary.interfaces import IDelimitedHierarchyContentPackageEnumeration
 
+from nti.dataserver.authorization import ROLE_SITE_ADMIN
+
 from nti.dataserver.tests import mock_dataserver
 
 from nti.dataserver.tests import mock_dataserver as mock_ds
@@ -332,21 +334,47 @@ class TestSubscriptions(ApplicationLayerTest, ZapierTestMixin):
                                  testapp=True,
                                  default_authenticate=True)
     def test_list(self):
-        target_url = "https://localhost/handle_new_user"
-        self._create_subscription("user", "created", target_url)
+        site_admin_one_env = self._make_extra_environ(username='site.admin.one')
+        site_admin_two_env = self._make_extra_environ(username='site.admin.two')
+        with mock_ds.mock_db_trans():
+            site_admin_one = self._create_user('site.admin.one')
+            self._assign_role(ROLE_SITE_ADMIN, site_admin_one.username)
 
-        res = self.testapp.get(b'/dataserver2/zapier/subscriptions')
-        body = res.json_body
-        assert_that(body, has_entries({
+            site_admin_two = self._create_user('site.admin.two')
+            self._assign_role(ROLE_SITE_ADMIN, site_admin_two.username)
+
+        target_url = "https://localhost/handle_new_user"
+        self._create_subscription("user", "created", target_url,
+                                  extra_environ=site_admin_one_env)
+
+        res = self.testapp.get(b'/dataserver2/zapier/subscriptions',
+                               extra_environ=site_admin_one_env).json_body
+        assert_that(res, has_entries({
             "Items": has_length(1)
         }))
 
-        assert_that(body["Items"][0], has_entries({
+        assert_that(res["Items"][0], has_entries({
             "Target": target_url,
             "Id": not_none(),
-            "OwnerId": self.extra_environ_default_user.lower(),
+            "OwnerId": "site.admin.one",
             "CreatedTime": not_none(),
             "Active": True,
             "Status": "Active",
             "href": not_none(),
+        }))
+
+        target_url = "https://localhost/handle_new_user"
+        self._create_subscription("user", "created", target_url,
+                                  extra_environ=site_admin_two_env)
+
+        res = self.testapp.get(b'/dataserver2/zapier/subscriptions',
+                               extra_environ=site_admin_two_env).json_body
+        assert_that(res, has_entries({
+            "Items": has_length(1)
+        }))
+
+        # NTI Admins should see all subscriptions for the site
+        res = self.testapp.get(b'/dataserver2/zapier/subscriptions').json_body
+        assert_that(res, has_entries({
+            "Items": has_length(2)
         }))

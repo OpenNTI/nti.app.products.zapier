@@ -7,6 +7,15 @@
     <include package="zope.component" />
     <include package="zope.security" />
 
+    <!-- Database creation and migration -->
+    <include package="zope.generations" />
+    <include package="zope.generations" file="subscriber.zcml" />
+
+    <!-- Generations -->
+    <utility factory=".generations.install._SchemaManager"
+             name="nti.dataserver-app-products-zapier"
+             provides="zope.generations.interfaces.IInstallableSchemaManager" />
+
     <!-- Avoid conflicts with permissions already defined by the dataserver -->
     <exclude package="nti.webhooks" file="permissions.zcml" />
     <include package="nti.webhooks" />
