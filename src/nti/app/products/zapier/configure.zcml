@@ -45,6 +45,12 @@
              for="nti.app.authentication.interfaces.ISiteAuthentication pyramid.interfaces.IRequest"
              provides="zope.traversing.interfaces.IPathAdapter"
              name="users" />
+    <adapter factory="nti.traversal.traversal.DefaultAdapterTraversable"
+             for=".interfaces.IIntegrationProviderPathAdapter pyramid.interfaces.IRequest" />
+    <adapter factory=".traversal.EnrollmentsPathAdapter"
+             for=".interfaces.IIntegrationProviderPathAdapter pyramid.interfaces.IRequest"
+             provides="zope.traversing.interfaces.IPathAdapter"
+             name="enrollments" />
 	<adapter name="zapier"
 			 for="nti.dataserver.interfaces.IUser pyramid.interfaces.IRequest"
 			 factory=".workspaces._zapier_workspace_for_user"

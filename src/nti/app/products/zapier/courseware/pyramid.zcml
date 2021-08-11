@@ -4,5 +4,6 @@
 
     <include package="pyramid_zcml" />
     <pyramid:scan package='.search_views' />
+    <pyramid:scan package='.action_views' />
 
 </configure>

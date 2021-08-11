@@ -12,9 +12,10 @@ from zope import interface
 
 from zope.container.contained import Contained
 
-from zope.traversing.interfaces import IPathAdapter
-
 from nti.app.products.zapier import AUTH_USERS_PATH
+from nti.app.products.zapier import ENROLLMENTS_PATH
+
+from nti.app.products.zapier.interfaces import IIntegrationProviderPathAdapter
 
 from nti.coremetadata.interfaces import AUTHENTICATED_GROUP_NAME
 
@@ -27,7 +28,7 @@ from nti.dataserver.authorization_acl import acl_from_aces
 from nti.dataserver.interfaces import ACE_DENY_ALL
 
 
-@interface.implementer(IPathAdapter)
+@interface.implementer(IIntegrationProviderPathAdapter)
 class IntegrationProviderPathAdapter(Contained):
 
     __name__ = "zapier"
@@ -54,6 +55,14 @@ def get_integration_provider(request):
 class UsersPathAdapter(Contained):
 
     __name__ = AUTH_USERS_PATH
+
+    def __init__(self, context, _unused_request):
+        self.__parent__ = context
+
+
+class EnrollmentsPathAdapter(Contained):
+
+    __name__ = ENROLLMENTS_PATH
 
     def __init__(self, context, _unused_request):
         self.__parent__ = context

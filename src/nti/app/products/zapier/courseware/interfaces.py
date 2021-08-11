@@ -166,8 +166,6 @@ class ICourseEnrollmentDetails(interface.Interface):
     Information regarding a user's enrollment in a course.
     """
 
-    Id = ValidNTIID(title=u"Enrollment record NTIID")
-
     User = Object(IUserDetails,
                   title=u"The user information tied to the enrollment.",
                   required=True)
@@ -177,7 +175,8 @@ class ICourseEnrollmentDetails(interface.Interface):
                     required=True)
 
     Scope = ValidChoice(title=u"The name of the enrollment scope",
-                        vocabulary=ENROLLMENT_SCOPE_VOCABULARY)
+                        vocabulary=ENROLLMENT_SCOPE_VOCABULARY,
+                        required=False)
 
 
 class IUserEnrolledEvent(IExternalEvent):

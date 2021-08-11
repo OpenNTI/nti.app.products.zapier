@@ -58,6 +58,9 @@
     <adapter factory=".adapters.progress_details"
              for="nti.contenttypes.completion.interfaces.IProgress"
              provides=".interfaces.IProgressDetails"/>
+    <adapter factory=".adapters.enrollment_details"
+             for="nti.app.products.courseware.interfaces.ICourseInstanceEnrollment"
+             provides=".interfaces.ICourseEnrollmentDetails"/>
 
     <!-- Subscribers -->
     <subscriber
