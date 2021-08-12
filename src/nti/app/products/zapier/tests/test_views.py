@@ -118,6 +118,92 @@ class TestSubscriptions(ApplicationLayerTest, ZapierTestMixin):
             "href": not_none(),
         }))
 
+    @WithSharedApplicationMockDS(users=('subscription.owner',
+                                        'non.owner.admin'),
+                                 testapp=True,
+                                 default_authenticate=True)
+    def test_get(self):
+        owner_username = 'subscription.owner'
+        owner_env = self._make_extra_environ(username=owner_username)
+        nti_admin_env = self._make_extra_environ()
+        non_owner_admin = 'non.owner.admin'
+        non_owner_env = self._make_extra_environ(username=non_owner_admin)
+        with mock_ds.mock_db_trans(site_name='janux.ou.edu'):
+            self._assign_role(ROLE_SITE_ADMIN, owner_username)
+            self._assign_role(ROLE_SITE_ADMIN, non_owner_admin)
+
+        target_url = "https://localhost/handle_new_user"
+        res = self._create_subscription("user", "created", target_url,
+                                        extra_environ=owner_env).json_body
+
+        subscription_url = res['href']
+
+        # Non owner can't fetch
+        self.testapp.get(subscription_url, extra_environ=non_owner_env, status=403)
+
+        # Owner can fetch
+        self._test_fetch(owner_env, subscription_url,
+                         expected_owner_id=owner_username,
+                         expected_target_url=target_url)
+
+        # NTI admins can fetch
+        self._test_fetch(nti_admin_env, subscription_url,
+                         expected_owner_id=owner_username,
+                         expected_target_url=target_url)
+
+    def _test_fetch(self, env, subscription_url,
+                    expected_owner_id, expected_target_url):
+        res = self.testapp.get(subscription_url, extra_environ=env)
+        assert_that(res.json_body, has_entries({
+            "Target": expected_target_url,
+            "Id": not_none(),
+            "OwnerId": expected_owner_id.lower(),
+            "CreatedTime": not_none(),
+            "Active": True,
+            "Status": "Active",
+            "href": not_none(),
+        }))
+
+    @WithSharedApplicationMockDS(users=('subscription.owner',
+                                        'non.owner.admin'),
+                                 testapp=True,
+                                 default_authenticate=True)
+    def test_delete(self):
+        owner_username = 'subscription.owner'
+        owner_env = self._make_extra_environ(username=owner_username)
+        non_owner_admin = 'non.owner.admin'
+        non_owner_env = self._make_extra_environ(username=non_owner_admin)
+        nti_admin_env = self._make_extra_environ()
+        with mock_ds.mock_db_trans(site_name='janux.ou.edu'):
+            self._get_user(username=owner_username)
+            self._assign_role(ROLE_SITE_ADMIN, owner_username)
+
+            self._get_user(username=non_owner_admin)
+            self._assign_role(ROLE_SITE_ADMIN, non_owner_admin)
+
+        target_url = "https://localhost/handle_new_user"
+        res = self._create_subscription("user", "created", target_url,
+                                        extra_environ=owner_env).json_body
+
+        # Non owner can't delete
+        self.testapp.delete(res['href'],
+                            extra_environ=non_owner_env,
+                            status=403)
+
+        # Owner can delete
+        self.testapp.delete(res['href'],
+                            extra_environ=owner_env,
+                            status=204)
+
+        # NTI admins can delete
+        target_url = "https://localhost/handle_new_user"
+        res = self._create_subscription("user", "created", target_url,
+                                        extra_environ=owner_env).json_body
+
+        self.testapp.delete(res['href'],
+                            extra_environ=nti_admin_env,
+                            status=204)
+
     @WithSharedApplicationMockDS(users=True,
                                  testapp=True,
                                  default_authenticate=True)

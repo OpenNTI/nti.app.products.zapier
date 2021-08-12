@@ -67,6 +67,12 @@
 
     <utility factory=".utils.ZapierWebhookDialect" name="zapier"/>
 
+    <!-- ACL -->
+    <!-- Permissioning is via zope, this just denies pyramid permissions -->
+    <adapter factory=".acl.SubscriptionACLProvider"
+             for="nti.webhooks.interfaces.IWebhookSubscription"
+             provides="nti.coremetadata.interfaces.IACLProvider" />
+
     <!-- Security Policy -->
     <!-- Provide appropriate permissions for our site admins to receive user events -->
     <adapter factory=".zope_security.UserPrincipalPermissionMap"

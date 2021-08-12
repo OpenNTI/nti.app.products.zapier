@@ -74,7 +74,7 @@ class AuthenticatedUserView(AbstractAuthenticatedView):
                                   policy_name='zapier')
 
 
-class SubscriptionViewMixin(object):
+class SubscriptionViewMixin(AbstractAuthenticatedView):
 
     @Lazy
     def is_admin(self):
@@ -84,19 +84,35 @@ class SubscriptionViewMixin(object):
         if not self.is_admin and not is_site_admin(self.remoteUser):
             raise hexc.HTTPForbidden(_('Cannot view subscriptions.'))
 
+    def _do_call(self):
+        raise NotImplementedError()
+
+    def externalize_result(self, result):
+        return to_external_object(result,
+                                  policy_name='zapier',
+                                  name="zapier-webhook")
+
     def __call__(self):
         self._predicate()
-        return super(SubscriptionViewMixin, self).__call__()
-        
+        result = self._do_call()
+        return self.externalize_result(result)
+
+
+class AbstractSubscriptionUploadView(ModeledContentUploadRequestUtilsMixin,
+                                     SubscriptionViewMixin):
+
+    def __call__(self):
+        self._predicate()
+        result = super(AbstractSubscriptionUploadView, self).__call__()
+        return self.externalize_result(result)
+
 
 @view_config(route_name='objects.generic.traversal',
              request_method='POST',
              renderer='rest',
              context=IntegrationProviderPathAdapter,
              name=SUBSCRIPTIONS_VIEW)
-class AddSubscriptionView(SubscriptionViewMixin,
-                          AbstractAuthenticatedView,
-                          ModeledContentUploadRequestUtilsMixin):
+class AddSubscriptionView(AbstractSubscriptionUploadView):
 
     def readInput(self, value=None):
         input = super(AddSubscriptionView, self).readInput(value=value)
@@ -137,12 +153,7 @@ class AddSubscriptionView(SubscriptionViewMixin,
 
         self.request.response.status_int = 201
 
-        # Choose our externalizer to conform to our docs
-        ext_obj = to_external_object(internal_subscription,
-                                     policy_name='zapier',
-                                     name="zapier-webhook")
-
-        return ext_obj
+        return internal_subscription
 
 
 @view_config(route_name='objects.generic.traversal',
@@ -155,6 +166,17 @@ class DeleteSubscriptionView(UGDDeleteView):
     def _do_delete_object(self, theObject):
         del theObject.__parent__[theObject.__name__]
         return theObject
+
+
+@view_config(route_name='objects.generic.traversal',
+             request_method='GET',
+             renderer='rest',
+             context=IWebhookSubscription,
+             permission=nauth.ACT_READ)
+class GetSubscriptionView(SubscriptionViewMixin):
+
+    def _do_call(self):
+        return self.context
 
 
 @view_config(route_name='objects.generic.traversal',
@@ -207,7 +229,7 @@ class ListSubscriptions(SubscriptionViewMixin,
         reverse = self.sortOrder == "descending"
         return sorted(subscriptions, key=attrgetter(self.sortOn), reverse=reverse)
 
-    def __call__(self, site=None):
+    def _do_call(self):
         self._predicate()
         result = LocatedExternalDict()
         items = self.get_subscriptions()
