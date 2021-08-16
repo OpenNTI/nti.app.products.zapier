@@ -51,9 +51,12 @@ from nti.externalization import to_external_object
 from nti.externalization.interfaces import LocatedExternalDict
 from nti.externalization.interfaces import StandardExternalFields
 
+from nti.webhooks.interfaces import IWebhookDeliveryAttempt
 from nti.webhooks.interfaces import IWebhookSubscription
 from nti.webhooks.interfaces import IWebhookSubscriptionManager
 
+CLASS = StandardExternalFields.CLASS
+MIMETYPE = StandardExternalFields.MIMETYPE
 ITEMS = StandardExternalFields.ITEMS
 TOTAL = StandardExternalFields.TOTAL
 ITEM_COUNT = StandardExternalFields.ITEM_COUNT
@@ -236,6 +239,152 @@ class ListSubscriptions(SubscriptionViewMixin,
         self._batch_items_iterable(result, items)
         result[TOTAL] = result[ITEM_COUNT]
 
-        return to_external_object(result,
-                                  policy_name='zapier',
-                                  name="zapier-webhook")
+        return result
+
+
+@view_config(route_name='objects.generic.traversal',
+             request_method='GET',
+             renderer='rest',
+             context=IWebhookSubscription,
+             name='DeliveryAttempts',
+             permission=nauth.ACT_READ)
+class GetSubscriptionDeliveryAttemptsView(SubscriptionViewMixin):
+
+    def _do_call(self):
+        result_dict = LocatedExternalDict()
+
+        result_dict[MIMETYPE] = 'application/vnd.nextthought.zapier.subscriptiondeliveryhistory'
+        result_dict[CLASS] = 'SubscriptionDeliveryHistory'
+        result_dict[ITEMS] = [x for x in self.context.values()]
+
+        return result_dict
+
+
+@view_config(route_name='objects.generic.traversal',
+             request_method='GET',
+             renderer='rest',
+             context=IWebhookSubscription,
+             name='DeliveryHistory',
+             permission=nauth.ACT_READ)
+class GetSubscriptionHistoryView(SubscriptionViewMixin,
+                                 BatchingUtilsMixin):
+    """
+    Return the delivery attempts for the subscription.
+
+    batchSize
+            The size of the batch.  Defaults to 50.
+
+    batchStart
+            The starting batch index.  Defaults to 0.
+
+    sortOn
+            The case insensitive field to sort on. Options are ``createdtime``
+            and ``status``.
+            The default is ``createdtime``.
+
+    sortOrder
+            The sort direction. Options are ``ascending`` and
+            ``descending``. Sort order is ascending by default.
+
+    search
+            String to use for searching messages of the delivery attempts.
+    """
+
+    _DEFAULT_BATCH_SIZE = 50
+    _DEFAULT_BATCH_START = 0
+
+    _default_sort = 'createdtime'
+    _sort_keys = {
+        'createdtime': lambda x: x.createdTime,
+        'status': lambda x: x.status,
+    }
+
+    def _get_sorted_result_set(self, items, sort_key, sort_desc=False):
+        """
+        Get the sorted result set.
+        """
+        items = sorted(items, key=sort_key, reverse=sort_desc)
+        return items
+
+    def _get_sort_params(self):
+        sort_on = self.request.params.get('sortOn') or ''
+        sort_on = sort_on.lower()
+        sort_on = sort_on if sort_on in self._sort_keys else self._default_sort
+        sort_key = self._sort_keys.get(sort_on)
+
+        # Ascending is default
+        sort_order = self.request.params.get('sortOrder')
+        sort_descending = bool(
+            sort_order and sort_order.lower() == 'descending')
+
+        return sort_key, sort_descending
+
+    def _search_items(self, search_param, items):
+        """
+        For the given search_param, return the results for those users
+        if it matches realname, alias, or displayable username.
+        """
+
+        def matches(item):
+            return item.message and search_param in item.message.lower()
+
+        results = [x for x in items if matches(x)]
+
+        return results
+
+    def _get_items(self, result_dict):
+        """
+        Sort and batch records.
+        """
+        search = self.request.params.get('search')
+        search_param = search and search.lower()
+
+        items = self.context.values()
+        if search_param:
+            items = self._search_items(search_param, items)
+
+        sort_key, sort_descending = self._get_sort_params()
+
+        result_set = self._get_sorted_result_set(items,
+                                                 sort_key,
+                                                 sort_descending)
+
+        total_items = result_dict[TOTAL] = len(result_set)
+        self._batch_items_iterable(result_dict,
+                                   result_set,
+                                   number_items_needed=total_items)
+
+        return [record for record in result_dict.get(ITEMS)]
+
+    def _do_call(self):
+        result_dict = LocatedExternalDict()
+
+        result_dict[MIMETYPE] = 'application/vnd.nextthought.zapier.subscriptiondeliveryhistory'
+        result_dict[CLASS] = 'SubscriptionDeliveryHistory'
+        result_dict[ITEMS] = self._get_items(result_dict)
+
+        return result_dict
+
+
+@view_config(route_name='objects.generic.traversal',
+             request_method='GET',
+             renderer='rest',
+             context=IWebhookDeliveryAttempt,
+             name='Request',
+             permission=nauth.ACT_READ)
+class GetDeliveryAttemptRequest(SubscriptionViewMixin):
+
+    def _do_call(self):
+        return self.context.request
+
+
+@view_config(route_name='objects.generic.traversal',
+             request_method='GET',
+             renderer='rest',
+             context=IWebhookDeliveryAttempt,
+             name='Response',
+             permission=nauth.ACT_READ)
+class GetDeliveryAttemptResponse(SubscriptionViewMixin):
+
+    def _do_call(self):
+        return self.context.response

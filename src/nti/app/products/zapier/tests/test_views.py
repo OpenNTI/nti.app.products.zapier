@@ -5,14 +5,28 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import json
+import uuid
+
+import time
+
 import shutil
 
+from hamcrest import anything
 from hamcrest import assert_that
+from hamcrest import contains
 from hamcrest import has_entries
+from hamcrest import has_key
 from hamcrest import has_length
+from hamcrest import is_
+from hamcrest import not_
 from hamcrest import not_none
 
 from zope import component
+
+from zope.component.hooks import getSite
+
+from zope.securitypolicy.interfaces import IPrincipalRoleManager
 
 from nti.app.products.courseware.tests import PersistentInstructedCourseApplicationTestLayer
 
@@ -35,9 +49,14 @@ from nti.dataserver.tests import mock_dataserver
 
 from nti.dataserver.tests import mock_dataserver as mock_ds
 
+from nti.dataserver.users.common import set_user_creation_site
+
 from nti.externalization.externalization import toExternalObject
 
 from nti.ntiids.ntiids import find_object_with_ntiid
+
+from nti.webhooks.testing import begin_synchronous_delivery
+from nti.webhooks.testing import mock_delivery_to
 
 
 class TestResolveMe(ApplicationLayerTest, ZapierTestMixin):
@@ -422,12 +441,19 @@ class TestSubscriptions(ApplicationLayerTest, ZapierTestMixin):
     def test_list(self):
         site_admin_one_env = self._make_extra_environ(username='site.admin.one')
         site_admin_two_env = self._make_extra_environ(username='site.admin.two')
+        non_admin_env = self._make_extra_environ(username='non.admin')
         with mock_ds.mock_db_trans():
-            site_admin_one = self._create_user('site.admin.one')
+            site_admin_one = self._create_user(username='site.admin.one')
             self._assign_role(ROLE_SITE_ADMIN, site_admin_one.username)
 
-            site_admin_two = self._create_user('site.admin.two')
+            site_admin_two = self._create_user(username='site.admin.two')
             self._assign_role(ROLE_SITE_ADMIN, site_admin_two.username)
+
+            self._create_user(username='non.admin')
+
+        # Non-admins have no access
+        self.testapp.get(b'/dataserver2/zapier/subscriptions',
+                         extra_environ=non_admin_env, status=403)
 
         target_url = "https://localhost/handle_new_user"
         self._create_subscription("user", "created", target_url,
@@ -464,3 +490,142 @@ class TestSubscriptions(ApplicationLayerTest, ZapierTestMixin):
         assert_that(res, has_entries({
             "Items": has_length(2)
         }))
+
+    @WithSharedApplicationMockDS(users=("site.admin.one",
+                                        "site.admin.two"),
+                                 testapp=True,
+                                 default_authenticate=False)
+    def test_history(self):
+        site_admin_one_env = self._make_extra_environ(username='site.admin.one')
+        site_admin_two_env = self._make_extra_environ(username='site.admin.two')
+        with mock_ds.mock_db_trans(site_name="janux.ou.edu"):
+            site_admin_one = self._get_user(username='site.admin.one')
+            set_user_creation_site(site_admin_one, getSite())
+            prm = IPrincipalRoleManager(getSite())
+            prm.assignRoleToPrincipal(ROLE_SITE_ADMIN.id, site_admin_one.username)
+
+            site_admin_two = self._get_user(username='site.admin.two')
+            set_user_creation_site(site_admin_two, getSite())
+            prm.assignRoleToPrincipal(ROLE_SITE_ADMIN.id, site_admin_two.username)
+
+        target_url = "https://localhost/handle_new_user"
+        res = self._create_subscription("user", "created", target_url,
+                                        extra_environ=site_admin_one_env)
+
+        subscription_ntiid = res.json_body['Id']
+        with mock_ds.mock_db_trans(site_name="janux.ou.edu"):
+            subscription = find_object_with_ntiid(subscription_ntiid)
+            assert_that(subscription, has_length(0))
+
+        usernames = list()
+        # Status should be `failed`
+        usernames.append(self._do_create_user(u'user.one', u'User One').json_body['Username'])
+
+        # Ensure we're getting non-duplicated values for `createdTime`
+        time.sleep(1)
+
+        # Status should be `successful`
+        mock_delivery_to(target_url)
+        usernames.append(self._do_create_user(u'user.two', u'User Two').json_body['Username'])
+        time.sleep(1)
+
+        # Status should be `pending`
+        begin_synchronous_delivery()
+        usernames.append(self._do_create_user(u'user.three', u'User Three').json_body['Username'])
+        time.sleep(1)
+
+        with mock_ds.mock_db_trans(site_name="janux.ou.edu"):
+            subscription = find_object_with_ntiid(subscription_ntiid)
+            assert_that(subscription, has_length(3))
+
+        # Only owner and nti admins can fetch
+        history_url = self.require_link_href_with_rel(res.json_body, "delivery_history")
+        self.testapp.get(history_url, extra_environ=site_admin_two_env, status=403)
+
+        #   Owner
+        res = self.testapp.get(history_url,
+                               extra_environ=site_admin_one_env).json_body
+        assert_that(res['Items'], has_length(3))
+
+        #   NTI admin
+        admin_env = self._make_extra_environ(username=self.default_username)
+        res = self.testapp.get(history_url, extra_environ=admin_env).json_body
+        assert_that(res['Items'], has_length(3))
+
+        assert_that(res["Items"][0], has_entries({
+            "status": is_("failed"),
+            "message": anything(),
+        }))
+        assert_that(res["Items"][0], not_(has_key("request")))
+        assert_that(res["Items"][0], not_(has_key("response")))
+
+        assert_that(res["Items"][1], has_entries(status='successful'))
+        assert_that(res["Items"][2], has_entries(status='pending'))
+
+        # Check search
+        res = self.testapp.get(history_url,
+                               params={
+                                   'search': 'OK'
+                               },
+                               extra_environ=admin_env).json_body
+        assert_that(res['Items'], has_length(1))
+        assert_that(res['Items'][0], has_entries(status='successful'))
+
+        # Fetch delivery response
+        response_url = self.require_link_href_with_rel(res['Items'][0], 'delivery_response')
+        res = self.testapp.get(response_url, extra_environ=admin_env).json_body
+        assert_that(res['status_code'], is_(200))
+
+        # Again, only NTI admins and owners can access
+        self.testapp.get(response_url, extra_environ=site_admin_two_env, status=403)
+        self.testapp.get(response_url, extra_environ=site_admin_one_env)
+
+        def assert_order(params, expected):
+            res = self.testapp.get(history_url,
+                                   params=params,
+                                   extra_environ=site_admin_one_env).json_body
+            assert_that(len(res['Items']), is_(len(expected)))
+
+            links = [self.require_link_href_with_rel(attempt, 'delivery_request')
+                     for attempt in res['Items']]
+            requests = [
+                self.testapp.get(link,
+                                 extra_environ=site_admin_one_env).json_body
+                for link in links
+            ]
+            bodies = [request['body'] for request in requests]
+            usernames = [json.loads(body)['Data']['Username'] if body else None
+                         for body in bodies]
+            assert_that(usernames, contains(*expected))
+
+        # Third attempt not sent, body will be `None`
+        assert_order({}, (usernames[0], usernames[1], None))
+        assert_order({'sortOn': 'createdtime'},
+                     (usernames[0], usernames[1], None))
+        assert_order({'sortOn': 'createdtime', 'sortOrder': 'invalid'},
+                     (usernames[0], usernames[1], None))
+        assert_order({'sortOn': 'createdtime', 'sortOrder': 'ascending'},
+                     (usernames[0], usernames[1], None))
+        assert_order({'sortOn': 'createdtime', 'sortOrder': 'descending'},
+                     (None, usernames[1], usernames[0]))
+        assert_order({'sortOn': 'status', 'sortOrder': 'ascending'},
+                     (usernames[0], None, usernames[1]))
+
+    def _do_create_user(self, username, name):
+        path = '/dataserver2/account.create'
+        email = u'%s@zaptest.org' % (username,)
+
+        data = {
+            'Username': username,
+            'realname': name,
+            'email': email,
+            'password': uuid.uuid4().hex
+        }
+
+        extra_env = {"HTTP_ORIGIN": self.default_origin}
+        res = self.testapp.post_json(path, data, extra_environ=extra_env)
+
+        # Clear cookies so we're not logged in for subsequent iterations
+        self.testapp.reset()
+
+        return res

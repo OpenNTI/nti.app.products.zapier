@@ -10,15 +10,15 @@ from zope import interface
 
 from nti.externalization.datastructures import InterfaceObjectIO
 
-from nti.externalization.externalization.standard_fields import timestamp_to_string
-
 from nti.externalization.interfaces import ExternalizationPolicy
 from nti.externalization.interfaces import IInternalObjectExternalizer
 
 from nti.traversal.traversal import normal_resource_path
 
-from nti.webhooks.interfaces import IWebhookSubscription
+from nti.webhooks.externalization import DeliveryAttemptExternalizer
 
+from nti.webhooks.interfaces import IWebhookDeliveryAttempt
+from nti.webhooks.interfaces import IWebhookSubscription
 
 
 #: An externalization policy that uses ISO 8601 date strings.
@@ -67,3 +67,20 @@ class SubscriptionExternalizer(InterfaceObjectIO):
 
         return result
 
+
+@component.adapter(IWebhookDeliveryAttempt)
+@interface.implementer(IInternalObjectExternalizer)
+class WebhookDeliveryAttemptExternalizer(DeliveryAttemptExternalizer):
+
+    _ext_iface_upper_bound = IWebhookDeliveryAttempt
+
+    _excluded_out_ivars_ = frozenset({
+        'request',
+        'response'
+    }) | DeliveryAttemptExternalizer._excluded_out_ivars_
+
+    def toExternalObject(self, *args, **kwargs): # pylint:disable=signature-differs
+        result = super(WebhookDeliveryAttemptExternalizer, self).toExternalObject(*args, **kwargs)
+        # result["href"] = normal_resource_path(self._ext_self)
+
+        return result

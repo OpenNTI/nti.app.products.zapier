@@ -24,6 +24,15 @@ ZAPIER_PATH = "zapier"
 #: Subscriptions view
 SUBSCRIPTIONS_VIEW = "subscriptions"
 
+#: Subscription delivery history view
+DELIVERY_HISTORY_VIEW = "DeliveryHistory"
+
+#: Delivery attempt request
+DELIVERY_REQUEST_VIEW = "Request"
+
+#: Delivery attempt response
+DELIVERY_RESPONSE_VIEW = "Response"
+
 #: Authenticated user resolve view
 RESOLVE_ME = "resolve_me"
 

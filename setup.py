@@ -16,6 +16,7 @@ TESTS_REQUIRE = [
     'fudge',
     'pyhamcrest',
     'nose2[coverage_plugin]',
+    'responses',
 ]
 
 

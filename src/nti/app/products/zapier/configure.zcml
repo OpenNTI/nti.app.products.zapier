@@ -91,6 +91,16 @@
 	<subscriber factory=".decorators._EnglishFirstAndLastNameDecorator"
 				provides="nti.externalization.interfaces.IExternalMappingDecorator" />
 
+    <subscriber factory=".decorators.SubscriptionLinkDecorator"
+                for="nti.webhooks.interfaces.IWebhookSubscription
+                     pyramid.interfaces.IRequest"
+                provides="nti.externalization.interfaces.IExternalMappingDecorator" />
+
+    <subscriber factory=".decorators.DeliveryAttemptLinkDecorator"
+                for="nti.webhooks.interfaces.IWebhookDeliveryAttempt
+                     pyramid.interfaces.IRequest"
+                provides="nti.externalization.interfaces.IExternalMappingDecorator" />
+
 	<!-- Workspaces -->
 	<!-- A subscriber for enumeration -->
 	<subscriber factory=".workspaces.ZapierWorkspace"
@@ -102,6 +112,9 @@
 
     <!-- Externalization -->
     <adapter factory=".externalization.SubscriptionExternalizer"
+             name="zapier-webhook"/>
+
+    <adapter factory=".externalization.WebhookDeliveryAttemptExternalizer"
              name="zapier-webhook"/>
 
     <include package="nti.externalization" file="meta.zcml" />
