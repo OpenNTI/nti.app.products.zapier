@@ -290,7 +290,7 @@ class GetSubscriptionHistoryView(SubscriptionViewMixin,
             String to use for searching messages of the delivery attempts.
     """
 
-    _DEFAULT_BATCH_SIZE = 50
+    _DEFAULT_BATCH_SIZE = 30
     _DEFAULT_BATCH_START = 0
 
     _default_sort = 'createdtime'
