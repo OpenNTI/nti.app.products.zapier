@@ -40,6 +40,7 @@ from nti.contenttypes.courses.interfaces import ICourseCatalog
 
 from nti.coremetadata.interfaces import IDataserver
 
+from nti.dataserver.authorization import is_admin
 from nti.dataserver.authorization import is_admin_or_site_admin
 
 from nti.dataserver.authorization_acl import has_permission
@@ -102,12 +103,16 @@ class _ZapierWorkspace(Contained):
                                   method='GET',
                                   elements=(USER_SEARCH,)))
 
-        if is_admin_or_site_admin(self.user):
+        if is_admin(self.user):
+            # Although views are permissioned to site admins as well,
+            # expose link to only NTI admins for now (to drive UI).
             links.append(Link(self._ds_folder(),
                               rel=SUBSCRIPTIONS_VIEW,
                               method='GET',
                               elements=(ZAPIER_PATH,
                                         SUBSCRIPTIONS_VIEW)))
+
+        if is_admin_or_site_admin(self.user):
             links.append(Link(self._ds_folder(),
                               rel='create_subscription',
                               method='POST',

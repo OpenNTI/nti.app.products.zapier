@@ -43,6 +43,8 @@ from nti.assessment.submission import QuestionSubmission
 from nti.contentlibrary.interfaces import IContentPackageLibrary
 from nti.contentlibrary.interfaces import IDelimitedHierarchyContentPackageEnumeration
 
+from nti.coremetadata.interfaces import IUser
+
 from nti.dataserver.authorization import ROLE_SITE_ADMIN
 
 from nti.dataserver.tests import mock_dataserver
@@ -496,17 +498,11 @@ class TestSubscriptions(ApplicationLayerTest, ZapierTestMixin):
                                  testapp=True,
                                  default_authenticate=False)
     def test_history(self):
+        admin_env = self._make_extra_environ(username=self.default_username)
         site_admin_one_env = self._make_extra_environ(username='site.admin.one')
         site_admin_two_env = self._make_extra_environ(username='site.admin.two')
         with mock_ds.mock_db_trans(site_name="janux.ou.edu"):
-            site_admin_one = self._get_user(username='site.admin.one')
-            set_user_creation_site(site_admin_one, getSite())
-            prm = IPrincipalRoleManager(getSite())
-            prm.assignRoleToPrincipal(ROLE_SITE_ADMIN.id, site_admin_one.username)
-
-            site_admin_two = self._get_user(username='site.admin.two')
-            set_user_creation_site(site_admin_two, getSite())
-            prm.assignRoleToPrincipal(ROLE_SITE_ADMIN.id, site_admin_two.username)
+            self._make_site_admins('site.admin.one', 'site.admin.two')
 
         target_url = "https://localhost/handle_new_user"
         res = self._create_subscription("user", "created", target_url,
@@ -538,19 +534,26 @@ class TestSubscriptions(ApplicationLayerTest, ZapierTestMixin):
             subscription = find_object_with_ntiid(subscription_ntiid)
             assert_that(subscription, has_length(3))
 
+        # Only admins get history decorated
+        self.forbid_link_with_rel(res.json_body, "delivery_history")
+        admin_res = self.testapp.get(res.json_body['href'], extra_environ=admin_env)
+        history_url = self.require_link_href_with_rel(admin_res.json_body, "delivery_history")
+
         # Only owner and nti admins can fetch
-        history_url = self.require_link_href_with_rel(res.json_body, "delivery_history")
         self.testapp.get(history_url, extra_environ=site_admin_two_env, status=403)
 
-        #   Owner
+        #   Owner can fetch, but gets no links for request/response
         res = self.testapp.get(history_url,
                                extra_environ=site_admin_one_env).json_body
         assert_that(res['Items'], has_length(3))
+        self.forbid_link_with_rel(res['Items'][0], "delivery_request")
+        self.forbid_link_with_rel(res['Items'][0], "delivery_response")
 
-        #   NTI admin
-        admin_env = self._make_extra_environ(username=self.default_username)
+        #   NTI admin can fetch and gets all links
         res = self.testapp.get(history_url, extra_environ=admin_env).json_body
         assert_that(res['Items'], has_length(3))
+        self.require_link_href_with_rel(res['Items'][0], "delivery_request")
+        self.require_link_href_with_rel(res['Items'][0], "delivery_response")
 
         assert_that(res["Items"][0], has_entries({
             "status": is_("failed"),
@@ -583,14 +586,14 @@ class TestSubscriptions(ApplicationLayerTest, ZapierTestMixin):
         def assert_order(params, expected):
             res = self.testapp.get(history_url,
                                    params=params,
-                                   extra_environ=site_admin_one_env).json_body
+                                   extra_environ=admin_env).json_body
             assert_that(len(res['Items']), is_(len(expected)))
 
             links = [self.require_link_href_with_rel(attempt, 'delivery_request')
                      for attempt in res['Items']]
             requests = [
                 self.testapp.get(link,
-                                 extra_environ=site_admin_one_env).json_body
+                                 extra_environ=admin_env).json_body
                 for link in links
             ]
             bodies = [request['body'] for request in requests]
@@ -610,6 +613,18 @@ class TestSubscriptions(ApplicationLayerTest, ZapierTestMixin):
                      (None, usernames[1], usernames[0]))
         assert_order({'sortOn': 'status', 'sortOrder': 'ascending'},
                      (usernames[0], None, usernames[1]))
+
+    def _make_site_admins(self, *users):
+        prm = IPrincipalRoleManager(getSite())
+        for user in users:
+            if IUser.providedBy(user):
+                username = user.username
+            else:
+                username = user
+                user = self._get_user(username=user)
+
+            set_user_creation_site(user, getSite())
+            prm.assignRoleToPrincipal(ROLE_SITE_ADMIN.id, username)
 
     def _do_create_user(self, username, name):
         path = '/dataserver2/account.create'

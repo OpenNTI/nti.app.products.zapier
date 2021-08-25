@@ -22,6 +22,8 @@ from nti.app.products.zapier.interfaces import IUserDetails
 
 from nti.app.renderers.decorators import AbstractAuthenticatedRequestAwareDecorator
 
+from nti.dataserver.authorization import is_admin
+
 from nti.externalization.interfaces import IExternalMappingDecorator
 from nti.externalization.interfaces import StandardExternalFields
 
@@ -74,10 +76,11 @@ class _EnglishFirstAndLastNameDecorator(Singleton):
 class SubscriptionLinkDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
     def _do_decorate_external(self, context, result):
-        links = result.setdefault(LINKS, [])
-        links.append(Link(context,
-                          rel='delivery_history',
-                          elements=(DELIVERY_HISTORY_VIEW,)))
+        if is_admin(self.remoteUser):
+            links = result.setdefault(LINKS, [])
+            links.append(Link(context,
+                              rel='delivery_history',
+                              elements=(DELIVERY_HISTORY_VIEW,)))
 
 
 @component.adapter(IWebhookDeliveryAttempt, IRequest)
@@ -85,10 +88,11 @@ class SubscriptionLinkDecorator(AbstractAuthenticatedRequestAwareDecorator):
 class DeliveryAttemptLinkDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
     def _do_decorate_external(self, context, result):
-        links = result.setdefault(LINKS, [])
-        links.append(Link(context,
-                          rel='delivery_request',
-                          elements=(DELIVERY_REQUEST_VIEW,)))
-        links.append(Link(context,
-                          rel='delivery_response',
-                          elements=(DELIVERY_RESPONSE_VIEW,)))
+        if is_admin(self.remoteUser):
+            links = result.setdefault(LINKS, [])
+            links.append(Link(context,
+                              rel='delivery_request',
+                              elements=(DELIVERY_REQUEST_VIEW,)))
+            links.append(Link(context,
+                              rel='delivery_response',
+                              elements=(DELIVERY_RESPONSE_VIEW,)))
