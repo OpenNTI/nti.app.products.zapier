@@ -236,8 +236,10 @@ class ListSubscriptions(SubscriptionViewMixin,
         self._predicate()
         result = LocatedExternalDict()
         items = self.get_subscriptions()
-        self._batch_items_iterable(result, items)
-        result[TOTAL] = result[ITEM_COUNT]
+        total_len = len(items)
+        self._batch_items_iterable(result, items,
+                                   number_items_needed=total_len)
+        result[TOTAL] = total_len
 
         return result
 
