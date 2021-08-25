@@ -246,24 +246,6 @@ class ListSubscriptions(SubscriptionViewMixin,
              request_method='GET',
              renderer='rest',
              context=IWebhookSubscription,
-             name='DeliveryAttempts',
-             permission=nauth.ACT_READ)
-class GetSubscriptionDeliveryAttemptsView(SubscriptionViewMixin):
-
-    def _do_call(self):
-        result_dict = LocatedExternalDict()
-
-        result_dict[MIMETYPE] = 'application/vnd.nextthought.zapier.subscriptiondeliveryhistory'
-        result_dict[CLASS] = 'SubscriptionDeliveryHistory'
-        result_dict[ITEMS] = [x for x in self.context.values()]
-
-        return result_dict
-
-
-@view_config(route_name='objects.generic.traversal',
-             request_method='GET',
-             renderer='rest',
-             context=IWebhookSubscription,
              name='DeliveryHistory',
              permission=nauth.ACT_READ)
 class GetSubscriptionHistoryView(SubscriptionViewMixin,
