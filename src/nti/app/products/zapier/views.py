@@ -201,8 +201,8 @@ class ListSubscriptions(SubscriptionViewMixin,
         'to': 'to',
         'active': 'active',
         'status_message': 'status_message',
-        'createdTime': 'createdTime',
-        'CreatedTime': 'createdTime',
+        'status': 'status_message',
+        'createdtime': 'createdTime',
     }
 
     _DEFAULT_SORT = 'createdTime'
@@ -214,7 +214,8 @@ class ListSubscriptions(SubscriptionViewMixin,
     @Lazy
     def sortOn(self):
         # pylint: disable=no-member
-        sort = self.params.get('sortOn')
+        sort = self.params.get('sortOn') or ''
+        sort = sort.lower()
         return self._ALLOWED_SORTING.get(sort) or self._DEFAULT_SORT
 
     @property
