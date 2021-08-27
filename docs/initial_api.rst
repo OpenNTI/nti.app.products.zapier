@@ -224,6 +224,18 @@ Sends a `UserCreatedEvent`_ containing the details of the newly created user:
     :EventType: ``user.created``
     :Data:  Contains the `UserDetails`_ of the created user.
 
+Available Zapier Fields
+~~~~~~~~~~~~~~~~~~~~~~~
+Fields available to subsequent steps in a Zap as a result of the trigger
+firing:
+
+    :Username:  A unique id for the user in the system.
+    :Email:  The user's email address linked to the account.
+    :Realname:  The users full real name, e.g. John Smith.
+    :CreatedTime:  When the user was first created (ISO formatted
+        date).
+    :LastLogin: When the user last logged in to the system.
+
 
 New Course Created
 ------------------
@@ -249,6 +261,26 @@ Sends an `CourseCreatedEvent`_ containing the details of the newly created cours
     :Description:
     :StartDate:
     :EndDate:
+
+Available Zapier Fields
+~~~~~~~~~~~~~~~~~~~~~~~
+Fields available to subsequent steps in a Zap as a result of the trigger
+firing:
+
+    :Id: A unique id for the course, created by the system.
+    :ProviderId: A unique id for the course, assigned by the provider.
+    :Title: A short user-friendly title for the course to show to
+        users.
+    :Description: A longer text-only description of the course.
+        Optional.
+    :RichDescription: A longer description of the course that can
+        contain html markup.  Typically the description populated when
+        creating courses from the application.  Optional.
+    :StartDate: The date on which the course begins. Optional.
+    :EndDate: The date on which the course ends. Optional.
+    :CreatedTime:  When the course was first created (ISO formatted
+        date).
+    :Last Modified: When the course was last modified.
 
 
 New Enrollment Created
@@ -340,6 +372,14 @@ Success: ``201 Created``
 
 The body will contain `UserDetails`_ for the newly created user.
 
+Zapier Input Fields
+~~~~~~~~~~~~~~~~~~~
+All fields are required unless explicitly marked as optional.
+
+:Username: Username for the user to be created.
+:Email: Email address for the user to be created.
+:Realname: Real name for the user to be created.
+
 
 Enroll User in Course
 ---------------------
@@ -409,6 +449,13 @@ Returns an item list of `UserDetails`_ objects, e.g.:
         "href": "/dataserver2/zapier/user_search/atest"
     }
 
+Zapier Input Fields
+~~~~~~~~~~~~~~~~~~~
+All fields are required unless explicitly marked as optional.
+
+:Name: String to use in the search for the user.  Only the first match
+    is used in later actions, so it may need to be something unique,
+    like a username.
 
 Search Course
 -------------
