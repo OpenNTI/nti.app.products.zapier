@@ -5,9 +5,9 @@ Zapier API
 
 Auth Verification
 =================
-Returns the details for the currently authenticated user.
-
 GET ``/dataserver2/zapier/resolve_me``
+
+Returns the details for the currently authenticated user.
 
 Response
 --------
@@ -40,6 +40,7 @@ Creates a subscription for the object and event type provided in the url.
 
 Request
 ~~~~~~~
+Requires the following fields in the body of the request:
 
 :target: Target URL to which a ``POST`` request will be sent with the details of
     the event, when triggered (see :ref:`Triggers` for the corresponding event
@@ -49,13 +50,13 @@ Response
 ~~~~~~~~
 Success: ``201 Created``
 
-Returns an ``WebhookSubscription`` object for the newly created subscription.
+Returns a `WebhookSubscription`_ object for the newly created subscription.
 
 .. _WebhookSubscription:
 
 ``WebhookSubscription``
     :EventType:  The event type used to create the subscription.  One of:
-        user.create, user.enroll, course.create, course.complete
+        user.created, user.enrolled, course.created, course.completed
     :Target:  The url to POST object data to when the trigger fires.
     :OwnerId:  Owner of the subscription.
     :CreatedTime: When the subscription was first created (ISO formatted date).
@@ -63,14 +64,9 @@ Returns an ``WebhookSubscription`` object for the newly created subscription.
     :Status: Current status of the subscription
     :href:  Location of the subscription.
 
-Will likely need to extend the current subscription to allow storage of
-``eventType`` data.  This could, to a limited degree, be derived from the
-subscriptions ``for`` and ``when`` data, but we may not want to
-expose that, and wouldn't match what was used during creation anyway.
-
 Remove Subscription
 -------------------
-DELETE <href-of-subscription returned during creation>
+DELETE `<href-of-subscription returned during creation>`
 
 Response
 ~~~~~~~~
@@ -79,16 +75,22 @@ Success: ``204 No Content``
 
 List Subscriptions
 ------------------
+GET ``/dataserver2/zapier/subscriptions``
+
 List all subscriptions the authenticated user has permission to see for
 the current site.  The link is available via a ``GET`` call to the
 ``subscriptions`` rel off of the ``zapier`` workspace.
-
-GET /dataserver2/zapier/subscriptions
 
 Request
 ~~~~~~~
 This is a batch list operation that will take the following parameters:
 
+:batchSize:
+    The size of the batch.  Both batchSize and batchStart must be
+    specified for paging.Defaults to 30.
+:batchStart:
+    The starting batch index. Both batchSize and batchStart must be
+    specified for paging. Defaults to 0.
 :sortOn:
     The case insensitive field to sort on. Options are ``createdtime``,
     ``owner``, ``target``, ``active``, and ``status``.
@@ -96,10 +98,6 @@ This is a batch list operation that will take the following parameters:
 :sortOrder:
     The sort direction. Options are ``ascending`` and
     ``descending``. Sort order is ascending by default.
-:batchStart:
-    The starting batch index.  Defaults to 0.
-:batchSize:
-    The size of the batch.  Defaults to 30.
 
 Response
 ~~~~~~~~
@@ -107,31 +105,29 @@ Returns a list of `WebhookSubscription`_ objects that the user has
 permission to see.
 
 
-Webhook History
----------------
+Delivery History
+----------------
+GET ``{subscription_path}/DeliveryHistory``
+
 Return the delivery attempts for the subscription.  The link is available via
 the ``delivery_history`` rel off of the subscription.
-
-GET ``{subscription_path}/DeliveryHistory``
 
 Request
 ~~~~~~~
 This is a batch list operation that will take the following parameters:
 
 :batchSize:
-    The size of the batch.  Defaults to 30.
-
+    The size of the batch.  Both batchSize and batchStart must be
+    specified for paging.Defaults to 30.
 :batchStart:
-    The starting batch index.  Defaults to 0.
-
+    The starting batch index.  Both batchSize and batchStart must be
+    specified for paging.Defaults to 0.
 :sortOn:
     The case insensitive field to sort on. Options are ``createdtime``
     and ``status``. The default is ``createdtime``.
-
 :sortOrder:
     The sort direction. Options are ``ascending`` and
     ``descending``. Sort order is ascending by default.
-
 :search:
         String to use for searching messages of the delivery attempts.
 
@@ -153,11 +149,11 @@ subscription.
 
 Get Delivery Attempt Request
 ----------------------------
+GET ``{delivery_attempt_path}/Request``
+
 Return information on the request sent to the remote host as part of this
 delivery attempt. The link is available via the ``delivery_request`` rel
 off of the delivery attempt.
-
-GET ``{delivery_attempt_path}/Request``
 
 Response
 ~~~~~~~~
@@ -168,7 +164,8 @@ delivery attempt.
 
 ``DeliveryAttemptRequest``
     :url: Url used as the target to send the request.
-    :method: Method used to send the request to the target url, e.g. ``POST``.
+    :method: The HTTP method used to send the request to the target url,
+        e.g. ``POST``.
     :headers: Headers supplied in the request.
     :body: The body supplied for the request.
     :CreatedTime: When the request was made (ISO formatted date).
@@ -177,11 +174,11 @@ delivery attempt.
 
 Get Delivery Attempt Response
 -----------------------------
+GET ``{delivery_attempt_path}/Response``
+
 Return information on the response received from the remote host as part
 of this delivery attempt. The link is available via the
 ``delivery_request`` rel off of the delivery attempt.
-
-GET ``{delivery_attempt_path}/Response``
 
 Response
 ~~~~~~~~
@@ -203,16 +200,14 @@ delivery attempt.
 
 Triggers
 ========
-.. note:: It might be useful to include details of the subscription that
-    initiated the trigger in the events sent.  We can probably deduce
-    ``eventType``, but the ``href`` of the subscription, for example, might
-    also be good to include.
 
 New User Created
 ----------------
-When: ``IUser``, ``IObjectAddedEvent``
+`Triggers <https://platform.zapier.com/docs/triggers>`_ when a new
+user is created in the site.
 
-Method: POST
+:When: ``IUser``, ``IObjectAddedEvent``
+:Method: POST
 
 Request
 ~~~~~~~
@@ -239,12 +234,15 @@ firing:
 
 New Course Created
 ------------------
-When: ICourseInstance, IObjectAddedEvent
-Method: POST
+`Triggers <https://platform.zapier.com/docs/triggers>`_ when a new
+course is created in the site.
+
+:When: ``ICourseInstance``, ``ICourseInstanceAvailableEvent``
+:Method: POST
 
 Request
 ~~~~~~~
-Sends an `CourseCreatedEvent`_ containing the details of the newly created course.
+Sends a `CourseCreatedEvent`_ containing the details of the newly created course.
 
 .. _CourseCreatedEvent:
 
@@ -256,11 +254,12 @@ Sends an `CourseCreatedEvent`_ containing the details of the newly created cours
 
 ``CourseDetails``
     :Id: NTIID of course instance
-    :ProviderId:
-    :Title:
-    :Description:
-    :StartDate:
-    :EndDate:
+    :ProviderId: A unique id for the course, assigned by the provider.
+    :Title: A short user-friendly title for the course to show to users.
+    :Description: A longer text-only description of the course.
+        Optional.
+    :StartDate: The date on which the course begins. Optional.
+    :EndDate: The date on which the course ends. Optional.
 
 Available Zapier Fields
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -285,13 +284,15 @@ firing:
 
 New Enrollment Created
 ----------------------
-When: ``ICourseInstanceEnrollmentRecord``, ``IObjectAddedEvent``
+`Triggers <https://platform.zapier.com/docs/triggers>`_ when a user is
+enrolled in a course.
 
-Method: POST
+:When: ``ICourseInstanceEnrollmentRecord``, ``IObjectAddedEvent``
+:Method: POST
 
 Request
 ~~~~~~~
-Sends an `UserEnrolledEvent`_ containing the enrollment information.
+Sends a `UserEnrolledEvent`_ containing the enrollment information.
 
 .. _UserEnrolledEvent:
 
@@ -304,22 +305,22 @@ Sends an `UserEnrolledEvent`_ containing the enrollment information.
 ``CourseEnrollmentDetails``
     :User: The `UserDetails`_ for the enrolled user.
     :Course: The `CourseDetails`_ for the associated course.
-    :Scope: One of `Public`, `Purchased`, `ForCredit`, `ForCreditDegree`, or
-        `ForCreditNonDegree`
+    :Scope: One of ``Public``, ``Purchased``, ``ForCredit``,
+        ``ForCreditDegree``, or ``ForCreditNonDegree``
 
 
 Course Progress Updated
 -----------------------
-Fired when a user successfully completes a required item for a course, such as
-an assignment.
+`Triggers <https://platform.zapier.com/docs/triggers>`_ when a user
+successfully completes a required item for a course, such as an
+assignment.
 
-When: ``ICourseInstance``, ``IUserProgressUpdatedEvent``
-
-Method: POST
+:When: ``ICourseInstance``, ``IUserProgressUpdatedEvent``
+:Method: POST
 
 Request
 ~~~~~~~
-Sends an `UserProgressUpdatedEvent`_ containing the completion info:
+Sends a `UserProgressUpdatedEvent`_ containing the completion info:
 
 .. _UserProgressUpdatedEvent:
 
@@ -332,7 +333,7 @@ Sends an `UserProgressUpdatedEvent`_ containing the completion info:
 ``ProgressSummary``
     :User: The `UserDetails`_ for the enrolled user.
     :Course: The `CourseDetails`_ for the associated course.
-    :Progess: The `ProgressDetails`_ for the associated course.
+    :Progess: The `ProgressDetails`_ of the user in the course.
 
 .. _ProgressDetails:
 
@@ -348,19 +349,15 @@ Create New User
 ---------------
 POST ``/dataserver2/++etc++hostsites/{site-name}/++etc++site/default/authentication/users``
 
-The link for this should be obtained from the service document located at
-``/dataserver2/service``.  This will provide a set of workspaces, one of which
-is the ``zapier`` workspace.  This workspace provides a link with a rel of
-``create_user`` under the ``Links`` element.  The ``href`` from this will
-provide the proper url.  The workspace can also be accessed off of the user at
-``/dataserver2/users/{authenticated_username}/zapier``, where the
-``authenticated_username`` variable will need replaced with the
-
 Create a new user with the given information.  This will send an email to the
-newly created user with a link to finish setting up their account.
+newly created user with a link to finish setting up their account. The
+link for this view is available off the ``zapier`` workspace with a rel
+of ``create_user``. The workspace is also available off the user at
+``/dataserver2/users/{authenticated_username}/zapier``.
 
 Request
 ~~~~~~~
+Requires the following fields in the body of the request:
 
 :Username: Username for the user to be created.
 :Email: Email address for the user to be created.
@@ -386,20 +383,23 @@ Enroll User in Course
 POST ``/dataserver2/zapier/enrollments``
 
 Enrolls the provided user in the course with given scope, though scope is
-optional and will default to `Public` if not provided.  The link for the view
+optional and will default to ``Public`` if not provided.  The link for the view
 is available off the ``zapier`` workspace with a rel of ``enroll_user``.
 
 Request
 ~~~~~~~
+Requires the following fields in the body of the request:
 
 :Username: Username for the user to be enrolled.
-:CourseId: `Id` of the course to enroll the user in.
-:Scope: One of `Public`, `Purchased`, `ForCredit`, `ForCreditDegree`, or
-    `ForCreditNonDegree`
+:CourseId: ``Id`` of the course to enroll the user in.
+:Scope: One of ``Public``, ``Purchased``, ``ForCredit``,
+    ``ForCreditDegree``, or ``ForCreditNonDegree``
 
 Response
 ~~~~~~~~
-Returns an `CourseEnrollmentDetails`_ for the new enrollment.  If the record is
+Success: ``201 Created`` or ``200 OK``
+
+Returns a `CourseEnrollmentDetails`_ for the new enrollment.  If the record is
 newly created, a status of ``201 Created`` will be returned.  If the user was
 already enrolled, a status of ``200 OK`` will be returned instead.
 
@@ -408,15 +408,12 @@ Search
 
 Search User
 -----------
-POST ``/dataserver2/++etc++hostsites/{site-name}/++etc++site/default/authentication/users``
+GET ``/dataserver2/++etc++hostsites/{site-name}/++etc++site/default/authentication/users``
 
-The link for this should be obtained from the service document located at
-``/dataserver2/service``.  This will provide a set of workspaces, one of which
-is the ``zapier`` workspace.  This workspace provides a link with a rel of
-``user_search`` under the ``Links`` element.  The ``href`` from this will
-provide the proper url.  The workspace can also be accessed off of the user at
-``/dataserver2/users/{authenticated_username}/zapier``, where the
-``authenticated_username`` variable will need replaced with the
+Search for users by username, real name and alias.
+The link for this view is available off the ``zapier`` workspace with a
+rel of ``user_search``. The workspace is also available off the user at
+``/dataserver2/users/{authenticated_username}/zapier``.
 
 Request
 ~~~~~~~
@@ -426,6 +423,8 @@ Currently limited to 1000 results, and no paging is performed.
 
 Response
 ~~~~~~~~
+Success: ``200 OK``
+
 Returns an item list of `UserDetails`_ objects, e.g.:
 
 .. code-block:: json
@@ -459,19 +458,38 @@ All fields are required unless explicitly marked as optional.
 
 Search Course
 -------------
-GET ``/dataserver2/zapier/course_search``
+GET ``/dataserver2/zapier/Courses``
+
+Search for courses by a course's title, provider id and tags.
+The link for this view is available off the ``zapier`` workspace with a
+rel of ``user_search``. The workspace is also available off the user at
+``/dataserver2/users/{authenticated_username}/zapier``.
 
 Request
 ~~~~~~~
+This is a batch list operation that will take the following parameters,
+all optional:
 
-:filter:  Filter string used to search for matches by title, description,
-    provider id and tags
-:sortOn:  The key on which to sort.  One of: "title", "startdate", or "enddate"
-:sortOrder:  "ascending" or "descending"
-:batchStart:  The absolute index of the first entry to return, after sorting.
-:batchSize:  The number of items to return in the batch/page.
-
+:batchSize:  The number of items to return in the batch/page.  Both
+    batchSize and batchStart must be specified for paging.  Default
+    is not to page.
+:batchStart:  The absolute index of the first entry to return, after
+    sorting. Both batchSize and batchStart must be specified for paging.
+    Default is not to page.
+:sortOn:  The key on which to sort.  One of: ``title``, ``startdate``,
+    ``enddate``, ``provideruniqueid``, ``createdtime``,
+    ``lastseentime``, or ``enrolled``.  The default is by ``title``,
+    then ``startdate``.
+:sortOrder:
+    The sort direction. Options are ``ascending`` and
+    ``descending``. Sort order is ascending by default.
+:filter:  Filter string used to search for matches by ``Title``,
+    ``ProviderId`` and tags.
+:filterOperator:  Either union or intersection if multiple filters
+            are supplied
 
 Response
 ~~~~~~~~
+Success: ``200 OK``
+
 Returns an item list of `CourseDetails`_ objects.
