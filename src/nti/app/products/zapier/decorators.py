@@ -7,18 +7,36 @@ from __future__ import absolute_import
 
 import nameparser
 
+from pyramid.interfaces import IRequest
+
 from zope import component
 from zope import interface
 
 from zope.i18n.interfaces import IUserPreferredLanguages
 
+from nti.app.products.zapier import DELIVERY_HISTORY_VIEW
+from nti.app.products.zapier import DELIVERY_REQUEST_VIEW
+from nti.app.products.zapier import DELIVERY_RESPONSE_VIEW
+
 from nti.app.products.zapier.interfaces import IUserDetails
 
+from nti.app.renderers.decorators import AbstractAuthenticatedRequestAwareDecorator
+
+from nti.dataserver.authorization import is_admin
+
 from nti.externalization.interfaces import IExternalMappingDecorator
+from nti.externalization.interfaces import StandardExternalFields
 
 from nti.externalization.singleton import Singleton
 
 from nti.common.nameparser import constants as np_constants
+
+from nti.links import Link
+
+from nti.webhooks.interfaces import IWebhookDeliveryAttempt
+from nti.webhooks.interfaces import IWebhookSubscription
+
+LINKS = StandardExternalFields.LINKS
 
 
 @component.adapter(IUserDetails)
@@ -51,3 +69,30 @@ class _EnglishFirstAndLastNameDecorator(Singleton):
             if first:
                 external['NonI18NFirstName'] = first
                 external['NonI18NLastName'] = last
+
+
+@component.adapter(IWebhookSubscription, IRequest)
+@interface.implementer(IExternalMappingDecorator)
+class SubscriptionLinkDecorator(AbstractAuthenticatedRequestAwareDecorator):
+
+    def _do_decorate_external(self, context, result):
+        if is_admin(self.remoteUser):
+            links = result.setdefault(LINKS, [])
+            links.append(Link(context,
+                              rel='delivery_history',
+                              elements=(DELIVERY_HISTORY_VIEW,)))
+
+
+@component.adapter(IWebhookDeliveryAttempt, IRequest)
+@interface.implementer(IExternalMappingDecorator)
+class DeliveryAttemptLinkDecorator(AbstractAuthenticatedRequestAwareDecorator):
+
+    def _do_decorate_external(self, context, result):
+        if is_admin(self.remoteUser):
+            links = result.setdefault(LINKS, [])
+            links.append(Link(context,
+                              rel='delivery_request',
+                              elements=(DELIVERY_REQUEST_VIEW,)))
+            links.append(Link(context,
+                              rel='delivery_response',
+                              elements=(DELIVERY_RESPONSE_VIEW,)))

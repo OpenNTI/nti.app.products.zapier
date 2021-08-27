@@ -93,6 +93,7 @@ class TestWorkspaces(ApplicationLayerTest):
     def _test_links(self,
                     site_auth_path,
                     include_admin_links=False,
+                    include_site_admin_links=False,
                     **kwargs):
         res = self.testapp.get('/dataserver2/service', **kwargs)
         res = res.json_body
@@ -126,7 +127,7 @@ class TestWorkspaces(ApplicationLayerTest):
                               'GET',
                               site_auth_path + '/' + USER_SEARCH)
 
-            if include_admin_links:
+            if include_site_admin_links:
                 self.require_link(ws_ext,
                                   'create_user',
                                   'POST',
@@ -142,12 +143,15 @@ class TestWorkspaces(ApplicationLayerTest):
                               SUBSCRIPTIONS_VIEW,
                               'GET',
                               '/'.join((ds_path, ZAPIER_PATH, SUBSCRIPTIONS_VIEW)))
+        else:
+            self.forbid_link_with_rel(ws_ext, SUBSCRIPTIONS_VIEW)
+
+        if include_site_admin_links:
             self.require_link(ws_ext,
                               'create_subscription',
                               'POST',
                               '/'.join((ds_path, ZAPIER_PATH, SUBSCRIPTIONS_VIEW)))
         else:
-            self.forbid_link_with_rel(ws_ext, SUBSCRIPTIONS_VIEW)
             self.forbid_link_with_rel(ws_ext, 'create_subscription')
 
     @WithSharedApplicationMockDS(users=True,
@@ -156,6 +160,7 @@ class TestWorkspaces(ApplicationLayerTest):
         extra_env = self._make_extra_environ(HTTP_ORIGIN="http://localhost")
         self._test_links(None,
                          include_admin_links=True,
+                         include_site_admin_links=True,
                          extra_environ=extra_env)
 
     @WithSharedApplicationMockDS(users=True,
@@ -165,7 +170,9 @@ class TestWorkspaces(ApplicationLayerTest):
             site_auth = component.getUtility(ISiteAuthentication)
             site_auth_path = traversal.resource_path(site_auth)
 
-        self._test_links(site_auth_path, include_admin_links=True)
+        self._test_links(site_auth_path,
+                         include_admin_links=True,
+                         include_site_admin_links=True)
 
     @WithSharedApplicationMockDS(testapp=True)
     def test_links_site_admin(self):
@@ -185,7 +192,8 @@ class TestWorkspaces(ApplicationLayerTest):
 
         extra_environ = self._make_extra_environ(username)
         self._test_links(site_auth_path,
-                         include_admin_links=True,
+                         include_admin_links=False,
+                         include_site_admin_links=True,
                          extra_environ=extra_environ)
 
     @WithSharedApplicationMockDS(testapp=True)
@@ -203,4 +211,5 @@ class TestWorkspaces(ApplicationLayerTest):
         extra_environ = self._make_extra_environ(username)
         self._test_links(site_auth_path,
                          include_admin_links=False,
+                         include_site_admin_links=False,
                          extra_environ=extra_environ)

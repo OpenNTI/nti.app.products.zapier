@@ -11,6 +11,7 @@ from zope.lifecycleevent import IObjectAddedEvent
 
 from zope.securitypolicy.interfaces import IRolePermissionManager
 
+from nti.dataserver.authorization import ROLE_ADMIN
 from nti.dataserver.authorization import ROLE_SITE_ADMIN
 
 from nti.webhooks.interfaces import IWebhookSubscription
@@ -26,6 +27,5 @@ _DEFAULT_PERMISSIONS = (
 def apply_security_to_subscription(subscription, _event):
     role_per = IRolePermissionManager(subscription)
     for perm_id in _DEFAULT_PERMISSIONS:
-        # TODO: What about platform admins?  They currently have no access
-        #  either.  Should that be granted?
         role_per.denyPermissionToRole(perm_id, ROLE_SITE_ADMIN.id)
+        role_per.grantPermissionToRole(perm_id, ROLE_ADMIN.id)

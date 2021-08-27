@@ -7,6 +7,15 @@
     <include package="zope.component" />
     <include package="zope.security" />
 
+    <!-- Database creation and migration -->
+    <include package="zope.generations" />
+    <include package="zope.generations" file="subscriber.zcml" />
+
+    <!-- Generations -->
+    <utility factory=".generations.install._SchemaManager"
+             name="nti.dataserver-app-products-zapier"
+             provides="zope.generations.interfaces.IInstallableSchemaManager" />
+
     <!-- Avoid conflicts with permissions already defined by the dataserver -->
     <exclude package="nti.webhooks" file="permissions.zcml" />
     <include package="nti.webhooks" />
@@ -58,6 +67,12 @@
 
     <utility factory=".utils.ZapierWebhookDialect" name="zapier"/>
 
+    <!-- ACL -->
+    <!-- Permissioning is via zope, this just denies pyramid permissions -->
+    <adapter factory=".acl.SubscriptionACLProvider"
+             for="nti.webhooks.interfaces.IWebhookSubscription"
+             provides="nti.coremetadata.interfaces.IACLProvider" />
+
     <!-- Security Policy -->
     <!-- Provide appropriate permissions for our site admins to receive user events -->
     <adapter factory=".zope_security.UserPrincipalPermissionMap"
@@ -76,6 +91,16 @@
 	<subscriber factory=".decorators._EnglishFirstAndLastNameDecorator"
 				provides="nti.externalization.interfaces.IExternalMappingDecorator" />
 
+    <subscriber factory=".decorators.SubscriptionLinkDecorator"
+                for="nti.webhooks.interfaces.IWebhookSubscription
+                     pyramid.interfaces.IRequest"
+                provides="nti.externalization.interfaces.IExternalMappingDecorator" />
+
+    <subscriber factory=".decorators.DeliveryAttemptLinkDecorator"
+                for="nti.webhooks.interfaces.IWebhookDeliveryAttempt
+                     pyramid.interfaces.IRequest"
+                provides="nti.externalization.interfaces.IExternalMappingDecorator" />
+
 	<!-- Workspaces -->
 	<!-- A subscriber for enumeration -->
 	<subscriber factory=".workspaces.ZapierWorkspace"
@@ -87,6 +112,9 @@
 
     <!-- Externalization -->
     <adapter factory=".externalization.SubscriptionExternalizer"
+             name="zapier-webhook"/>
+
+    <adapter factory=".externalization.WebhookDeliveryAttemptExternalizer"
              name="zapier-webhook"/>
 
     <include package="nti.externalization" file="meta.zcml" />
