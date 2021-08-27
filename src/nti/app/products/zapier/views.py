@@ -201,8 +201,8 @@ class ListSubscriptions(SubscriptionViewMixin,
         'to': 'to',
         'active': 'active',
         'status_message': 'status_message',
-        'createdTime': 'createdTime',
-        'CreatedTime': 'createdTime',
+        'status': 'status_message',
+        'createdtime': 'createdTime',
     }
 
     _DEFAULT_SORT = 'createdTime'
@@ -214,7 +214,8 @@ class ListSubscriptions(SubscriptionViewMixin,
     @Lazy
     def sortOn(self):
         # pylint: disable=no-member
-        sort = self.params.get('sortOn')
+        sort = self.params.get('sortOn') or ''
+        sort = sort.lower()
         return self._ALLOWED_SORTING.get(sort) or self._DEFAULT_SORT
 
     @property
@@ -236,28 +237,12 @@ class ListSubscriptions(SubscriptionViewMixin,
         self._predicate()
         result = LocatedExternalDict()
         items = self.get_subscriptions()
-        self._batch_items_iterable(result, items)
-        result[TOTAL] = result[ITEM_COUNT]
+        total_len = len(items)
+        self._batch_items_iterable(result, items,
+                                   number_items_needed=total_len)
+        result[TOTAL] = total_len
 
         return result
-
-
-@view_config(route_name='objects.generic.traversal',
-             request_method='GET',
-             renderer='rest',
-             context=IWebhookSubscription,
-             name='DeliveryAttempts',
-             permission=nauth.ACT_READ)
-class GetSubscriptionDeliveryAttemptsView(SubscriptionViewMixin):
-
-    def _do_call(self):
-        result_dict = LocatedExternalDict()
-
-        result_dict[MIMETYPE] = 'application/vnd.nextthought.zapier.subscriptiondeliveryhistory'
-        result_dict[CLASS] = 'SubscriptionDeliveryHistory'
-        result_dict[ITEMS] = [x for x in self.context.values()]
-
-        return result_dict
 
 
 @view_config(route_name='objects.generic.traversal',

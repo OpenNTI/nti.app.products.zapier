@@ -107,7 +107,13 @@ class TestSubscriptions(ApplicationLayerTest, ZapierTestMixin):
 
     default_origin = 'http://janux.ou.edu'
 
-    def _create_subscription(self, obj_type, event_type, target_url, **kwargs):
+    default_username = 'admin.zapier@nextthought.com'
+
+    def _create_subscription(self, obj_type, event_type, target_url,
+                             created_time=None,
+                             status_message=None,
+                             active=True,
+                             **kwargs):
         workspace_kwargs = dict()
         if 'extra_environ' in kwargs:
             workspace_kwargs['extra_environ'] = kwargs['extra_environ']
@@ -120,6 +126,21 @@ class TestSubscriptions(ApplicationLayerTest, ZapierTestMixin):
                                          "target": target_url
                                      },
                                      **kwargs)
+
+        if created_time or status_message or not active:
+            with mock_ds.mock_db_trans():
+                subscription = find_object_with_ntiid(res.json_body['Id'])
+
+                if created_time:
+                    subscription.createdTime = created_time
+
+                if not active:
+                    manager = subscription.__parent__
+                    manager.deactivateSubscription(subscription)
+
+                if status_message:
+                    subscription.status_message = status_message
+
         return res
 
     @WithSharedApplicationMockDS(users=True,
@@ -150,8 +171,7 @@ class TestSubscriptions(ApplicationLayerTest, ZapierTestMixin):
         non_owner_admin = 'non.owner.admin'
         non_owner_env = self._make_extra_environ(username=non_owner_admin)
         with mock_ds.mock_db_trans(site_name='janux.ou.edu'):
-            self._assign_role(ROLE_SITE_ADMIN, owner_username)
-            self._assign_role(ROLE_SITE_ADMIN, non_owner_admin)
+            self._make_site_admins(owner_username, non_owner_admin)
 
         target_url = "https://localhost/handle_new_user"
         res = self._create_subscription("user", "created", target_url,
@@ -196,11 +216,7 @@ class TestSubscriptions(ApplicationLayerTest, ZapierTestMixin):
         non_owner_env = self._make_extra_environ(username=non_owner_admin)
         nti_admin_env = self._make_extra_environ()
         with mock_ds.mock_db_trans(site_name='janux.ou.edu'):
-            self._get_user(username=owner_username)
-            self._assign_role(ROLE_SITE_ADMIN, owner_username)
-
-            self._get_user(username=non_owner_admin)
-            self._assign_role(ROLE_SITE_ADMIN, non_owner_admin)
+            self._make_site_admins(owner_username, non_owner_admin)
 
         target_url = "https://localhost/handle_new_user"
         res = self._create_subscription("user", "created", target_url,
@@ -437,29 +453,27 @@ class TestSubscriptions(ApplicationLayerTest, ZapierTestMixin):
             subscription = find_object_with_ntiid(subscription_ntiid)
             assert_that(subscription, has_length(1))
 
-    @WithSharedApplicationMockDS(users=True,
+    @WithSharedApplicationMockDS(users=('site.admin.one',
+                                        'site.admin.two',
+                                        'non.admin'),
                                  testapp=True,
                                  default_authenticate=True)
     def test_list(self):
         site_admin_one_env = self._make_extra_environ(username='site.admin.one')
         site_admin_two_env = self._make_extra_environ(username='site.admin.two')
         non_admin_env = self._make_extra_environ(username='non.admin')
-        with mock_ds.mock_db_trans():
-            site_admin_one = self._create_user(username='site.admin.one')
-            self._assign_role(ROLE_SITE_ADMIN, site_admin_one.username)
-
-            site_admin_two = self._create_user(username='site.admin.two')
-            self._assign_role(ROLE_SITE_ADMIN, site_admin_two.username)
-
-            self._create_user(username='non.admin')
+        with mock_ds.mock_db_trans(site_name='janux.ou.edu'):
+            self._make_site_admins('site.admin.one', 'site.admin.two')
 
         # Non-admins have no access
         self.testapp.get(b'/dataserver2/zapier/subscriptions',
                          extra_environ=non_admin_env, status=403)
 
-        target_url = "https://localhost/handle_new_user"
-        self._create_subscription("user", "created", target_url,
-                                  extra_environ=site_admin_one_env)
+        target_one = "https://localhost/handle_new_user_one"
+        created_time = time.time()
+        self._create_subscription("user", "created", target_one,
+                                  extra_environ=site_admin_one_env,
+                                  created_time=created_time)
 
         res = self.testapp.get(b'/dataserver2/zapier/subscriptions',
                                extra_environ=site_admin_one_env).json_body
@@ -468,7 +482,7 @@ class TestSubscriptions(ApplicationLayerTest, ZapierTestMixin):
         }))
 
         assert_that(res["Items"][0], has_entries({
-            "Target": target_url,
+            "Target": target_one,
             "Id": not_none(),
             "OwnerId": "site.admin.one",
             "CreatedTime": not_none(),
@@ -477,9 +491,12 @@ class TestSubscriptions(ApplicationLayerTest, ZapierTestMixin):
             "href": not_none(),
         }))
 
-        target_url = "https://localhost/handle_new_user"
-        self._create_subscription("user", "created", target_url,
-                                  extra_environ=site_admin_two_env)
+        target_two = "https://localhost/handle_new_user_two"
+        created_time += 1
+        self._create_subscription("user", "created", target_two,
+                                  extra_environ=site_admin_two_env,
+                                  created_time=created_time,
+                                  status_message=u'1')
 
         res = self.testapp.get(b'/dataserver2/zapier/subscriptions',
                                extra_environ=site_admin_two_env).json_body
@@ -492,6 +509,66 @@ class TestSubscriptions(ApplicationLayerTest, ZapierTestMixin):
         assert_that(res, has_entries({
             "Items": has_length(2)
         }))
+
+        # Create a third subscription to test paging
+        created_time += 1
+        target_three = "https://localhost/handle_new_user_three"
+        self._create_subscription("user", "created", target_three,
+                                  created_time=created_time,
+                                  status_message=u'2',
+                                  active=False)
+
+        # Paging
+        #   First page
+        subscription_url = b'/dataserver2/zapier/subscriptions'
+        res = self.testapp.get(subscription_url,
+                               params={'batchSize': '2'}).json_body
+        assert_that(res['Total'], is_(3))
+        self.require_link_href_with_rel(res, 'batch-next')
+        self.forbid_link_with_rel(res, 'batch-prev')
+
+        #   Middle page
+        res = self.testapp.get(subscription_url,
+                               params={'batchStart': '1', 'batchSize': '1'}).json_body
+        assert_that(res['Total'], is_(3))
+        self.require_link_href_with_rel(res, 'batch-next')
+        self.require_link_href_with_rel(res, 'batch-prev')
+
+        #   Last page
+        res = self.testapp.get(subscription_url,
+                               params={'batchStart': '1', 'batchSize': '2'}).json_body
+        assert_that(res['Total'], is_(3))
+        self.forbid_link_with_rel(res, 'batch-next')
+        self.require_link_href_with_rel(res, 'batch-prev')
+
+        # Test sorting
+        def assert_order(params, expected, key='Target'):
+            res_ = self.testapp.get(subscription_url,
+                                    params=params).json_body
+            assert_that(res_['ItemCount'], is_(len(expected)))
+            values = [item[key]
+                      for item in res_['Items']]
+            assert_that(values, contains(*expected))
+
+        assert_order({},
+                     (target_one, target_two, target_three))
+        assert_order({'sortOn': 'createdtime'},
+                     (target_one, target_two, target_three))
+        assert_order({'sortOn': 'createdtime', 'sortOrder': 'invalid'},
+                     (target_one, target_two, target_three))
+        assert_order({'sortOn': 'createdtime', 'sortOrder': 'ascending'},
+                     (target_one, target_two, target_three))
+        assert_order({'sortOn': 'createdtime', 'sortOrder': 'descending'},
+                     (target_three, target_two, target_one))
+        assert_order({'sortOn': 'owner'},
+                     (target_three, target_one, target_two))
+        assert_order({'sortOn': 'target'},
+                     (target_one, target_three, target_two))
+        assert_order({'sortOn': 'status'},
+                     (target_two, target_three, target_one))
+        assert_order({'sortOn': 'active'},
+                     (False, True, True),
+                     key='Active')
 
     @WithSharedApplicationMockDS(users=("site.admin.one",
                                         "site.admin.two"),
