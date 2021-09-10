@@ -57,6 +57,7 @@ from nti.externalization.externalization import toExternalObject
 
 from nti.ntiids.ntiids import find_object_with_ntiid
 
+from nti.webhooks.testing import _clear_mocks
 from nti.webhooks.testing import begin_synchronous_delivery
 from nti.webhooks.testing import mock_delivery_to
 
@@ -592,13 +593,15 @@ class TestSubscriptions(ApplicationLayerTest, ZapierTestMixin):
 
         usernames = list()
         # Status should be `failed`
+        mock_delivery_to(target_url, status=403)
         usernames.append(self._do_create_user(u'user.one', u'User One').json_body['Username'])
 
         # Ensure we're getting non-duplicated values for `createdTime`
         time.sleep(1)
 
         # Status should be `successful`
-        mock_delivery_to(target_url)
+        _clear_mocks()
+        mock_delivery_to(target_url, status=200)
         usernames.append(self._do_create_user(u'user.two', u'User Two').json_body['Username'])
         time.sleep(1)
 

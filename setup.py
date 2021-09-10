@@ -6,7 +6,7 @@ entry_points = {
     'console_scripts': [
     ],
     "z3c.autoinclude.plugin": [
-        'target = nti.app',
+        'target = nti.app.products',
     ],
 }
 
@@ -17,6 +17,11 @@ TESTS_REQUIRE = [
     'pyhamcrest',
     'nose2[coverage_plugin]',
     'responses',
+    'fakeredis',
+    'nti.app.testing',
+    'nti.app.contenttypes.credit',
+    'nti.app.sites.alpha',
+    'nti.app.products.ou',
 ]
 
 
