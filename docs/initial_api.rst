@@ -224,12 +224,16 @@ Available Zapier Fields
 Fields available to subsequent steps in a Zap as a result of the trigger
 firing:
 
-    :Username:  A unique id for the user in the system.
-    :Email:  The user's email address linked to the account.
-    :Realname:  The users full real name, e.g. John Smith.
-    :CreatedTime:  When the user was first created (ISO formatted
-        date).
-    :LastLogin: When the user last logged in to the system.
+============== ================ =========================================
+Field Name     Label            Description
+============== ================ =========================================
+Username       Username         A unique id for the user in the system.
+Email          Email            The user's email address linked to the account.
+Realname       Real Name        The users full real name, e.g. John Smith.
+CreatedTime    Created Time     When the user was first created (ISO formatted
+                                date).
+LastLogin      Last Login       When the user last logged in to the system.
+============== ================ =========================================
 
 
 New Course Created
@@ -269,20 +273,24 @@ Available Zapier Fields
 Fields available to subsequent steps in a Zap as a result of the trigger
 firing:
 
-    :Id: A unique id for the course, created by the system.
-    :ProviderId: A unique id for the course, assigned by the provider.
-    :Title: A short user-friendly title for the course to show to
-        users.
-    :Description: A longer text-only description of the course.
-        Optional.
-    :RichDescription: A longer description of the course that can
-        contain html markup.  Typically the description populated when
-        creating courses from the application.  Optional.
-    :StartDate: The date on which the course begins. Optional.
-    :EndDate: The date on which the course ends. Optional.
-    :CreatedTime:  When the course was first created (ISO formatted
-        date).
-    :Last Modified: When the course was last modified.
+================= ======================= ==============================
+Field Name        Label                   Description
+================= ======================= ==============================
+Id                Course ID               A unique id for the course, created by the system.
+ProviderId        Provider ID             A unique id for the course,
+                                          assigned by the provider.
+Title             Title                   | A short user-friendly title for the course to show to
+                                          | users.
+Description       Description             A longer text-only description of the course. Optional.
+RichDescription   Description (Rich Text) | A longer description of the course that can contain
+                                          | html markup. Typically the description populated when
+                                          | when creating courses from the application.  Optional.
+
+StartDate         Start Date              The date on which the course begins. Optional.
+EndDate           End Date                The date on which the course ends. Optional.
+CreatedTime       Created Time            When the course was first created (ISO formatted date).
+Last Modified     Last Modified           When the course was last modified.
+================= ======================= ==============================
 
 
 New Enrollment Created
@@ -316,28 +324,29 @@ Available Zapier Fields
 Fields available to subsequent steps in a Zap as a result of the trigger
 firing:
 
-    :Username:  A unique id for the user in the system.
-    :Email:  The user's email address linked to the account.
-    :Real Name:  The users full real name, e.g. John Smith.
-    :NonI18NFirstName: First name of the user's real name, if one can be
-        provided.
-    :NonI18NLastName:  Last name of the user's real name, if one can be
-        provided.
-    :CourseId: A unique id for the course, created by the system.
-    :CourseTitle: A short user-friendly title for the course to show to
-        users.
-    :ProviderId: A unique id for the course, assigned by the
-        provider.
-    :Description: A longer text-only description of the course.
-        Optional.
-    :RichDescription:
-        A longer description of the course that can
-        contain html markup.  Typically the description populated when
-        creating courses from the application.  Optional.
-    :StartDate: The date on which the course begins. Optional.
-    :EndDate: The date on which the course ends. Optional.
-    :Scope: One of ``Public``, ``Purchased``, ``ForCredit``,
-        ``ForCreditDegree``, or ``ForCreditNonDegree``
+================= ======================= ==============================
+Field Name        Label                   Description
+================= ======================= ==============================
+Username          Username                A unique id for the user in the system.
+Email             Email                   The user's email address linked to the account.
+Realname          Real Name               The users full real name, e.g. John Smith.
+NonI18NFirstName  First Name              | First name of the user's real name, if one can
+                                          | be provided.
+NonI18NLastName   Last Name               | Last name of the user's real name, if one can be
+                                          | provided.
+CourseId          Course ID               A unique id for the course, created by the system.
+CourseTitle       Course Title            | A short user-friendly title for the course to show to
+                                          | users.
+ProviderId        Course Provider ID      A unique id for the course, assigned by the provider.
+Description       Course Description      A longer text-only description of the course. Optional.
+RichDescription   | Course Description    | A longer description of the course that can contain
+                  | (Rich Text)           | html markup.  Typically the description populated when
+                                          | creating courses from the application.  Optional.
+StartDate         Start Date              The date on which the course begins. Optional.
+EndDate           End Date                The date on which the course ends. Optional.
+Scope             Scope                   | One of ``Public``, ``Purchased``, ``ForCredit``,
+                                          | ``ForCreditDegree``, or ``ForCreditNonDegree``
+================= ======================= ==============================
 
 Course Progress Updated
 -----------------------
@@ -379,19 +388,24 @@ Available Zapier Fields
 Fields available to subsequent steps in a Zap as a result of the trigger
 firing:
 
-    :Username:  A unique id for the user in the system.
-    :Email:  The user's email address linked to the account.
-    :Realname:  The users full real name, e.g. John Smith.
-    :NonI18NFirstName:  First name of the user's real name, if one can be provided.
-    :NonI18NLastName:  Last name of the user's real name, if one can be provided.
-    :CourseId: A unique id for the course, created by the system.
-    :CourseTitle: A short user-friendly title for the course to show to
-        users.
-    :AbsoluteProgress: Number of required items completed in the course.
-    :MaxPossibleProgress: Total completable required items in the
-        course.
-    :PercentageProgress: Percentage of required items completed for the
-        course.
+=================== ======================= ==============================
+Field Name          Label                   Description
+=================== ======================= ==============================
+Username            Username                A unique id for the user in the system.
+Email               Email                   The user's email address linked to the account.
+Realname            Real Name               The users full real name, e.g. John Smith.
+NonI18NFirstName    First Name              | First name of the user's real name, if one can be
+                                            | provided.
+NonI18NLastName     Last Name               | Last name of the user's real name, if one can be
+                                            | provided.
+CourseId            Course ID               A unique id for the course, created by the system.
+CourseTitle         Course Title            | A short user-friendly title for the course to show to
+                                            | users.
+AbsoluteProgress    Absolute Progress       Number of required items completed in the course.
+MaxPossibleProgress Max Possible Progress   Total completable required items in the course.
+PercentageProgress  Percentage Progress     | Percentage of required items completed for the
+                                            | course.
+=================== ======================= ==============================
 
 Actions
 =======
@@ -424,24 +438,26 @@ Zapier Input Fields
 ~~~~~~~~~~~~~~~~~~~
 All fields are required unless explicitly marked as optional.
 
-:Username: Username for the user to be created.
-:Email: Email address for the user to be created.
-:Realname: Real name for the user to be created.
+================= ======================= ==============================
+Field Name        Label                   Description
+================= ======================= ==============================
+Username          Username                Username for the user to be created.
+Email             Email                   Email address for the user to be created.
+Realname          Real Name               Real name for the user to be created.
+================= ======================= ==============================
 
 Zapier Output Fields
 ~~~~~~~~~~~~~~~~~~~~
 
-:Username:  A unique id for the user in the system.
-:Email:  The user's email address linked to the account.
-:Realname:  The users full real name, e.g. John Smith.
-:NonI18NFirstName:  First name of the user's real name, assuming one can
-    be provided.
-:NonI18NLastName:  Last name of the user's real name, assuming one can
-    be provided.
-:CreatedTime:  When the user was first created (ISO formatted
-    date).
-:LastLogin: When the user last logged in to the system.
-:LastSeen:  When the user last interacted with the system.
+================= ======================= ==============================
+Field Name        Label                   Description
+================= ======================= ==============================
+Username          Username                A unique id for the user in the system.
+Email             Email                   The user's email address linked to the account.
+Realname          Real Name               The users full real name, e.g. John Smith.
+CreatedTime       Created Time            When the user was first created (ISO formatted date).
+LastLogin         Last Login              When the user last logged in to the system.
+================= ======================= ==============================
 
 
 Enroll User in Course
@@ -473,31 +489,40 @@ Zapier Input Fields
 ~~~~~~~~~~~~~~~~~~~
 All fields are required unless explicitly marked as optional.
 
-:CourseId: The id of the course in which to enroll the user.
-:Username: The username of the user to be enrolled.
+================= ======================= ==============================
+Field Name        Label                   Description
+================= ======================= ==============================
+CourseId          CourseId                The id of the course in which to enroll the user.
+Username          Username                The username of the user to be enrolled.
+================= ======================= ==============================
 
 Zapier Output Fields
 ~~~~~~~~~~~~~~~~~~~~
 
-:Username:  A unique id for the user in the system.
-:Email:  The user's email address linked to the account.
-:Realname:  The users full real name, e.g. John Smith.
-:NonI18NFirstName:  First name of the user's real name, assuming one can
-    be provided.
-:NonI18NLastName:  Last name of the user's real name, assuming one can
-    be provided.
+================= ======================= ==============================
+Field Name        Label                   Description
+================= ======================= ==============================
+Username          Username                A unique id for the user in the system.
+Email             Email                   The user's email address linked to the account.
+Realname          Real Name               The users full real name, e.g. John Smith.
+NonI18NFirstName  First Name              | First name of the user's real name, if one can
+                                          | be provided.
+NonI18NLastName   Last Name               | Last name of the user's real name, if one can be
+                                          | provided.
 
-:CourseId: A unique id for the course, created by the system.
-:ProviderId: A unique id for the course, assigned by the provider.
-:Title: A short user-friendly title for the course to show to users.
-:RichDescription: A longer description of the course that can
-    contain html markup.  Typically the description populated when
-    creating courses from the application.  Optional.
-:StartDate: The date on which the course begins. Optional.
-:EndDate: The date on which the course ends. Optional.
-:Scope: One of ``Public``, ``Purchased``, ``ForCredit``,
-    ``ForCreditDegree``, or ``ForCreditNonDegree``
-
+CourseId          Course ID               A unique id for the course, created by the system.
+ProviderId        Course Provider ID      A unique id for the course, assigned by the provider.
+Title             Course Title            | A short user-friendly title for the course to show to
+                                          | users.
+Description       Description             A longer text-only description of the course. Optional.
+RichDescription   Description (Rich Text) | A longer description of the course that can contain
+                                          | html markup. Typically the description populated when
+                                          | when creating courses from the application.  Optional.
+StartDate         Start Date              The date on which the course begins. Optional.
+EndDate           End Date                The date on which the course ends. Optional.
+Scope             Scope                   | One of ``Public``, ``Purchased``, ``ForCredit``,
+                                          | ``ForCreditDegree``, or ``ForCreditNonDegree``
+================= ======================= ==============================
 
 Search
 ======
@@ -548,24 +573,31 @@ Zapier Input Fields
 ~~~~~~~~~~~~~~~~~~~
 All fields are required unless explicitly marked as optional.
 
-:Name: String to use in the search for the user.  Only the first match
-    is used in later actions, so it may need to be something unique,
-    like a username.
+================= ======================= ==============================
+Field Name        Label                   Description
+================= ======================= ==============================
+Name              Name                    | String to use in the search for the user.  Only the
+                                          | first match is used in later actions, so it may need
+                                          | to be something unique, like a username.
+================= ======================= ==============================
 
 Zapier Output Fields
 ~~~~~~~~~~~~~~~~~~~~
 
-:Username:  A unique id for the user in the system.
-:Email:  The user's email address linked to the account.
-:Realname:  The users full real name, e.g. John Smith.
-:NonI18NFirstName:  First name of the user's real name, assuming one can
-    be provided.
-:NonI18NLastName:  Last name of the user's real name, assuming one can
-    be provided.
-:CreatedTime:  When the user was first created (ISO formatted
-    date).
-:LastLogin: When the user last logged in to the system.
-:LastSeen:  When the user last interacted with the system.
+================= ======================= ==============================
+Field Name        Label                   Description
+================= ======================= ==============================
+Username          Username                A unique id for the user in the system.
+Email             Email                   The user's email address linked to the account.
+Realname          Real Name               The users full real name, e.g. John Smith.
+NonI18NFirstName  First Name              | First name of the user's real name, if one can
+                                          | be provided.
+NonI18NLastName   Last Name               | Last name of the user's real name, if one can be
+                                          | provided.
+CreatedTime       Created Time            When the user was first created (ISO formatted
+                                          date).
+LastLogin         Last Login              When the user last logged in to the system.
+================= ======================= ==============================
 
 
 Search Course
@@ -610,20 +642,29 @@ Zapier Input Fields
 ~~~~~~~~~~~~~~~~~~~
 All fields are required unless explicitly marked as optional.
 
-:Filter: String to use in the course for the user.  Only the first match
-    is used in later actions, so it may need to be something unique,
-    like a provider ID.
+============ ======= ==============================
+Field Name   Label   Description
+============ ======= ==============================
+filter       Filter  | String to use in the course for the user.  Only the first match
+                     | is used in later actions, so it may need to be something unique,
+                     | like a provider ID.
+============ ======= ==============================
 
 Zapier Output Fields
 ~~~~~~~~~~~~~~~~~~~~
 
-:Id: A unique id for the course, created by the system.
-:CreatedTime: When the course was first created (ISO formatted date).
-:ProviderId: A unique id for the course, assigned by the provider.
-:Title: A short user-friendly title for the course to show to users.
-:Description:  A longer text-only description of the course. Optional.
-:RichDescription: A longer description of the course that can
-    contain html markup.  Typically the description populated when
-    creating courses from the application.  Optional.
-:StartDate: The date on which the course begins. Optional.
-:EndDate: The date on which the course ends. Optional.
+================= ======================= ==============================
+Field Name        Label                   Description
+================= ======================= ==============================
+Id                Course ID               A unique id for the course, created by the system.
+CreatedTime       Created Time            When the course was first created (ISO formatted date).
+ProviderId        Provider ID             A unique id for the course, assigned by the provider.
+Title             Title                   | A short user-friendly title for the course to show to
+                                          | users.
+Description       Description             A longer text-only description of the course. Optional.
+RichDescription   Description (Rich Text) | A longer description of the course that can contain
+                                          | html markup. Typically the description populated when
+                                          | when creating courses from the application.  Optional.
+StartDate         Start Date              The date on which the course begins. Optional.
+EndDate           End Date                The date on which the course ends. Optional.
+================= ======================= ==============================
