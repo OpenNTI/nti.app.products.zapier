@@ -40,7 +40,7 @@ from nti.app.products.zapier.tests import ZapierTestCase
 from nti.contenttypes.completion.interfaces import UserProgressUpdatedEvent
 from nti.contenttypes.completion.interfaces import IProgress
 
-from nti.contenttypes.completion.progress import Progress
+from nti.contenttypes.completion.progress import CompletionContextProgress
 
 from nti.contenttypes.courses import courses
 
@@ -108,9 +108,10 @@ def _catalog_entry():
 
 class TestProgressUpdatedAdapters(ZapierTestCase):
 
-    def _zapier_user_progress_event(self, course, user):
-        progress = Progress(AbsoluteProgress=1,
-                            MaxPossibleProgress=2)
+    def _zapier_user_progress_event(self, course, user, completed_item):
+        progress = CompletionContextProgress(AbsoluteProgress=1,
+                                             MaxPossibleProgress=2,
+                                             CompletedItem=completed_item)
         record = fudge.Fake('CourseInstanceEnrollmentRecord')
         record.has_attr(CourseInstance=course)
         interface.alsoProvides(record, ICourseInstanceEnrollmentRecord)
@@ -120,6 +121,19 @@ class TestProgressUpdatedAdapters(ZapierTestCase):
 
     @WithMockDS
     def test_progress_updated_payload(self):
+        self._check_progress_updated_payload()
+
+    @WithMockDS
+    def test_progress_updated_payload_unsuccessful(self):
+        completed_item = fudge.Fake('CompletedItem').has_attr(Success=False)
+        self._check_progress_updated_payload(completed_item)
+
+    @WithMockDS
+    def test_progress_updated_payload_successful(self):
+        completed_item = fudge.Fake('CompletedItem').has_attr(Success=True)
+        self._check_progress_updated_payload(completed_item)
+
+    def _check_progress_updated_payload(self, completed_item=None):
         with mock_ds.mock_db_trans():
             user = User.create_user(username=u"jbender",
                                     external_value={
@@ -129,7 +143,7 @@ class TestProgressUpdatedAdapters(ZapierTestCase):
 
             catalog_entry = _catalog_entry()
             course = CourseInstance(catalog_entry)
-            zevent = self._zapier_user_progress_event(course, user)
+            zevent = self._zapier_user_progress_event(course, user, completed_item)
 
             payload = \
                 component.getMultiAdapter((zevent.EnrollmentRecord, zevent),
@@ -152,6 +166,8 @@ class TestProgressUpdatedAdapters(ZapierTestCase):
                 AbsoluteProgress=1,
                 MaxPossibleProgress=2,
                 PercentageProgress=0.5,
+                Completed=bool(completed_item is not None),
+                Success=getattr(completed_item, 'Success', False)
             ))
 
     @WithMockDS
@@ -172,9 +188,12 @@ class TestProgressUpdatedAdapters(ZapierTestCase):
                                              user=user,
                                              context=course)
 
+            completed_item = fudge.Fake('CompletedItem')
             progress = fudge.Fake('Progress').has_attr(AbsoluteProgress=1,
                                                        MaxPossibleProgress=2,
-                                                       PercentageProgress=0.5)
+                                                       PercentageProgress=0.5,
+                                                       Completed=True,
+                                                       CompletedItem=completed_item)
             adapter = fudge.Fake('ProgressAdapter').is_callable().returns(progress)
             with _provide_adapter(adapter, required=(IUser, ICourseInstance), provided=IProgress):
                 zapier_event = IZapierUserProgressUpdatedEvent(event)
@@ -186,6 +205,8 @@ class TestProgressUpdatedAdapters(ZapierTestCase):
                 AbsoluteProgress=1,
                 MaxPossibleProgress=2,
                 PercentageProgress=0.5,
+                Completed=True,
+                CompletedItem=completed_item
             ))
 
 

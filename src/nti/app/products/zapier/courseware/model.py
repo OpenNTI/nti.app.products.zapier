@@ -9,6 +9,7 @@ from zope import interface
 
 from zope.interface.interfaces import ObjectEvent
 
+from nti.app.products.zapier.courseware.interfaces import ICompletionContextProgressDetails
 from nti.app.products.zapier.courseware.interfaces import ICourseCreatedEvent
 from nti.app.products.zapier.courseware.interfaces import ICourseDetails
 from nti.app.products.zapier.courseware.interfaces import ICourseEnrollmentDetails
@@ -109,6 +110,21 @@ class ProgressDetails(object):
         result = "%s(AbsoluteProgress=%r, MaxPossibleProgress=%r)" \
                  % (clazz, self.AbsoluteProgress, self.MaxPossibleProgress)
         return result
+
+
+@WithRepr
+@interface.implementer(ICompletionContextProgressDetails)
+class CompletionContextProgressDetails(ProgressDetails):
+
+    __external_can_create__ = False
+
+    __external_class_name__ = "CompletionContextProgressDetails"
+    mimeType = mime_type = "application/vnd.nextthought.zapier.completioncontextprogressdetails"
+
+    def __init__(self, Completed=None, Success=None, *args, **kwargs):
+        super(CompletionContextProgressDetails, self).__init__(*args, **kwargs)
+        self.Completed = Completed
+        self.Success = Success
 
 
 @WithRepr
