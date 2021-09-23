@@ -21,14 +21,15 @@ from nti.app.products.zapier.interfaces import EVENT_PROGESS_UPDATED
 from nti.app.products.zapier.interfaces import IUserDetails
 from nti.app.products.zapier.interfaces import IWebhookSubscriber
 
+from nti.app.products.zapier.courseware.interfaces import ICompletionContextProgressDetails
 from nti.app.products.zapier.courseware.interfaces import ICourseDetails
 from nti.app.products.zapier.courseware.interfaces import IProgressDetails
 from nti.app.products.zapier.courseware.interfaces import IZapierUserProgressUpdatedEvent
 
+from nti.app.products.zapier.courseware.model import CompletionContextProgressDetails
 from nti.app.products.zapier.courseware.model import CourseDetails
 from nti.app.products.zapier.courseware.model import CourseEnrollmentDetails
 from nti.app.products.zapier.courseware.model import ExternalUserProgressUpdatedEvent
-from nti.app.products.zapier.courseware.model import ProgressDetails
 from nti.app.products.zapier.courseware.model import ProgressSummary
 from nti.app.products.zapier.courseware.model import UserEnrolledEvent
 from nti.app.products.zapier.courseware.model import ZapierUserProgressUpdatedEvent
@@ -72,10 +73,13 @@ def zapier_user_progress(event):
     )
 
 
-@interface.implementer(IProgressDetails)
+@interface.implementer(ICompletionContextProgressDetails)
 @component.adapter(IProgress)
 def progress_details(progress):
-    return ProgressDetails(
+    success = progress.CompletedItem is not None and progress.CompletedItem.Success
+    return CompletionContextProgressDetails(
+        Completed=progress.Completed,
+        Success=success,
         AbsoluteProgress=progress.AbsoluteProgress,
         MaxPossibleProgress=progress.MaxPossibleProgress
     )

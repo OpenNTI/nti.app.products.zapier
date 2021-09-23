@@ -27,6 +27,7 @@ from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
 
 from nti.ntiids.schema import ValidNTIID
 
+from nti.schema.field import Bool
 from nti.schema.field import Float
 from nti.schema.field import Object
 from nti.schema.field import ValidChoice
@@ -91,6 +92,16 @@ class IProgressDetails(interface.Interface):
                                readonly=True,
                                min=0.0,
                                max=1.0)
+
+
+class ICompletionContextProgressDetails(IProgressDetails):
+
+    Completed = Bool(title=u"Indicates the user has completed the item.",
+                     default=False)
+
+    Success = Bool(title=u"Successfully completed",
+                   description=u"Indicates the user has successfully completed this item.",
+                   default=True)
 
 
 class IProgressSummary(interface.Interface):

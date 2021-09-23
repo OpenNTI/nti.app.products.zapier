@@ -57,7 +57,7 @@
              provides=".interfaces.IZapierUserProgressUpdatedEvent"/>
     <adapter factory=".adapters.progress_details"
              for="nti.contenttypes.completion.interfaces.IProgress"
-             provides=".interfaces.IProgressDetails"/>
+             provides=".interfaces.ICompletionContextProgressDetails"/>
     <adapter factory=".adapters.enrollment_details"
              for="nti.app.products.courseware.interfaces.ICourseInstanceEnrollment"
              provides=".interfaces.ICourseEnrollmentDetails"/>
