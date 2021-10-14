@@ -93,6 +93,9 @@ class DeliveryAttemptLinkDecorator(AbstractAuthenticatedRequestAwareDecorator):
             links.append(Link(context,
                               rel='delivery_request',
                               elements=(DELIVERY_REQUEST_VIEW,)))
-            links.append(Link(context,
-                              rel='delivery_response',
-                              elements=(DELIVERY_RESPONSE_VIEW,)))
+
+            # If there was a failure sending, there may not have been a response
+            if context.response is not None:
+                links.append(Link(context,
+                                  rel='delivery_response',
+                                  elements=(DELIVERY_RESPONSE_VIEW,)))

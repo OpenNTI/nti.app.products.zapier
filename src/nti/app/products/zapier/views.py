@@ -372,4 +372,7 @@ class GetDeliveryAttemptRequest(SubscriptionViewMixin):
 class GetDeliveryAttemptResponse(SubscriptionViewMixin):
 
     def _do_call(self):
+        if self.context.response is None:
+            raise hexc.HTTPNotFound()
+
         return self.context.response
