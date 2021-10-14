@@ -44,6 +44,7 @@ class TestExternalization(ZapierTestCase):
                                      name="zapier-webhook")
 
         assert_that(ext_obj, has_entries({
+            "MimeType": 'application/vnd.nextthought.webhooks.webhooksubscription',
             "Target": obj.to,
             "Id": not_none(),
             "OwnerId": obj.owner_id,

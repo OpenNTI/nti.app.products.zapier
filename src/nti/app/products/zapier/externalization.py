@@ -16,6 +16,7 @@ from nti.externalization.interfaces import IInternalObjectExternalizer
 from nti.traversal.traversal import normal_resource_path
 
 from nti.webhooks.externalization import DeliveryAttemptExternalizer
+from nti.webhooks.externalization import SubscriptionExternalizer
 
 from nti.webhooks.interfaces import IWebhookDeliveryAttempt
 from nti.webhooks.interfaces import IWebhookSubscription
@@ -29,7 +30,7 @@ ISODateExternalizationPolicy = ExternalizationPolicy(
 
 @component.adapter(IWebhookSubscription)
 @interface.implementer(IInternalObjectExternalizer)
-class SubscriptionExternalizer(InterfaceObjectIO):
+class SubscriptionExternalizer(SubscriptionExternalizer):
 
     __external_class_name__ = "WebhookSubscription"
 
@@ -53,6 +54,9 @@ class SubscriptionExternalizer(InterfaceObjectIO):
         "owner_id": "OwnerId",
         "status_message": "Status",
         "to": "Target",
+        "Contents": None,
+        "when": None,
+        "for_": None,
     }
 
     def toExternalObject(self, *args, **kwargs): # pylint:disable=signature-differs
