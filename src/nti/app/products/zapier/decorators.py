@@ -23,6 +23,9 @@ from nti.app.products.zapier.interfaces import IUserDetails
 from nti.app.renderers.decorators import AbstractAuthenticatedRequestAwareDecorator
 
 from nti.dataserver.authorization import is_admin
+from nti.dataserver.authorization import ACT_DELETE
+
+from nti.dataserver.authorization_acl import has_permission
 
 from nti.externalization.interfaces import IExternalMappingDecorator
 from nti.externalization.interfaces import StandardExternalFields
@@ -81,6 +84,12 @@ class SubscriptionLinkDecorator(AbstractAuthenticatedRequestAwareDecorator):
             links.append(Link(context,
                               rel='delivery_history',
                               elements=(DELIVERY_HISTORY_VIEW,)))
+
+        if has_permission(ACT_DELETE, context, self.request):
+            links = result.setdefault(LINKS, [])
+            links.append(Link(context,
+                              rel='delete',
+                              method='DELETE'))
 
 
 @component.adapter(IWebhookDeliveryAttempt, IRequest)
