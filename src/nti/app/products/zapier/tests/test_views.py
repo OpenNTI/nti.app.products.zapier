@@ -224,12 +224,14 @@ class TestSubscriptions(ApplicationLayerTest, ZapierTestMixin):
                                         extra_environ=owner_env).json_body
 
         # Non owner can't delete
+        self.forbid_link_with_rel(res, 'delete')
         self.testapp.delete(res['href'],
                             extra_environ=non_owner_env,
                             status=403)
 
         # Owner can delete
-        self.testapp.delete(res['href'],
+        delete_url = self.require_link_href_with_rel(res, 'delete')
+        self.testapp.delete(delete_url,
                             extra_environ=owner_env,
                             status=204)
 
@@ -238,7 +240,8 @@ class TestSubscriptions(ApplicationLayerTest, ZapierTestMixin):
         res = self._create_subscription("user", "created", target_url,
                                         extra_environ=owner_env).json_body
 
-        self.testapp.delete(res['href'],
+        delete_url = self.require_link_href_with_rel(res, 'delete')
+        self.testapp.delete(delete_url,
                             extra_environ=nti_admin_env,
                             status=204)
 
