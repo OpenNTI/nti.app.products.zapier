@@ -224,7 +224,6 @@ class TestSubscriptions(ApplicationLayerTest, ZapierTestMixin):
                                         extra_environ=owner_env).json_body
 
         # Non owner can't delete
-        self.forbid_link_with_rel(res, 'delete')
         self.testapp.delete(res['href'],
                             extra_environ=non_owner_env,
                             status=403)

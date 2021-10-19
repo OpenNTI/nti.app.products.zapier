@@ -85,7 +85,7 @@ class SubscriptionLinkDecorator(AbstractAuthenticatedRequestAwareDecorator):
                               rel='delivery_history',
                               elements=(DELIVERY_HISTORY_VIEW,)))
 
-        if has_permission(ACT_DELETE, context, self.request):
+        if has_permission(ACT_DELETE, context, self.authenticated_userid):
             links = result.setdefault(LINKS, [])
             links.append(Link(context,
                               rel='delete',
